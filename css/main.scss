@@ -8,6 +8,15 @@ body{
   font-family: 'Arial';
 }
 
+@mixin btns($cor) {
+  background-color: $cor;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  text-transform: uppercase;
+  padding: 0.8em;
+}
+
 .header{
   display: flex;
   justify-content : space-between;
@@ -36,28 +45,23 @@ body{
 }
 
 #save, #import{
-  background-color: rgb(0, 160, 240);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  text-transform: uppercase;
-  padding: 1em;
+  @include btns(rgb(0, 160, 240))
 }
 
 #save:hover, #import:hover{
   cursor: pointer;
 }
 
+.btnclose{
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  width: 100%;
+  margin-top: auto;
+}
+
 #close {
-  background-color: rgb(200, 0, 0);
-  color: white;
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  border: none;
-  text-transform: uppercase;
-  padding: 0.7em;
-  border-radius: 10px;
+  @include btns(rgb(200, 0, 0));
 }
 
 #template {
@@ -78,25 +82,32 @@ body{
   padding: 10px;
   border-radius: 5px;
   width: 400px;
-  min-height: 300px;
-  height: fit-content;
+  min-height: 350px;
+  height: auto;
   text-align: center;
   position: relative;
+  display: flex;
+  flex-direction: column;
+
+  h3{
+    margin: 7px 0;
+  }
 }
 
 #templateList{
   border-top: 1px solid;
   width: calc(100% + 20px);
   margin: 0 -10px;
-}
-
-.modal-content h3{
-  margin: 7px 0;
+  flex-grow: 1;
 }
 
 .template-item{
   width: 100%;
   margin-top: 7px;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid rgb(0, 0, 0, 0.5);
+  }
 }
 
 .button-container{
@@ -104,19 +115,15 @@ body{
   justify-content: center;
   align-items: center;
   gap: 10px;
-}
+  margin: 3px 0 6px 0;
+   
+  button{
+    @include btns(rgb(0, 160, 240));
+  }
 
-.button-container button{
-  background-color: rgb(0, 160, 240);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  text-transform: uppercase;
-  padding: 0.7em;
-}
-
-.button-container button:last-child{
-  background-color: rgb(200, 0, 0);
+  button:last-child{
+    @include btns(rgb(200, 0, 0));
+  }
 }
 
 .button-container button:hover {

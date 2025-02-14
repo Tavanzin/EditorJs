@@ -1,1 +1,139 @@
-/*# sourceMappingURL=main.css.map */
+* {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  height: 100%;
+  font-family: "Arial";
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100vw;
+  height: 70px;
+  padding: 0 20px;
+  border-bottom: 0.5px solid;
+}
+
+.pag {
+  display: flex;
+  justify-content: center;
+  width: 100vw;
+  min-height: calc(100vh - 70px);
+  height: -moz-fit-content;
+  height: fit-content;
+  background-color: rgb(233, 233, 233);
+}
+
+#editorjs {
+  background-color: white;
+  width: 47%;
+  padding: 15px 0;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+#save, #import {
+  background-color: rgb(0, 160, 240);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  text-transform: uppercase;
+  padding: 0.8em;
+}
+
+#save:hover, #import:hover {
+  cursor: pointer;
+}
+
+.btnclose {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  width: 100%;
+  margin-top: auto;
+}
+
+#close {
+  background-color: rgb(200, 0, 0);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  text-transform: uppercase;
+  padding: 0.8em;
+}
+
+#template {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+  width: 400px;
+  min-height: 350px;
+  height: auto;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.modal-content h3 {
+  margin: 7px 0;
+}
+
+#templateList {
+  border-top: 1px solid;
+  width: calc(100% + 20px);
+  margin: 0 -10px;
+  flex-grow: 1;
+}
+
+.template-item {
+  width: 100%;
+  margin-top: 7px;
+}
+.template-item:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 3px 0 6px 0;
+}
+.button-container button {
+  background-color: rgb(0, 160, 240);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  text-transform: uppercase;
+  padding: 0.8em;
+}
+.button-container button:last-child {
+  background-color: rgb(200, 0, 0);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  text-transform: uppercase;
+  padding: 0.8em;
+}
+
+.button-container button:hover {
+  cursor: pointer;
+}/*# sourceMappingURL=main.css.map */
