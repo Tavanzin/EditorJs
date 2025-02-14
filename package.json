@@ -1,0 +1,28 @@
+{
+  "name": "editorjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@editorjs/editorjs": "^2.30.8",
+    "vite": "^6.1.0"
+  },
+  "dependencies": {
+    "@editorjs/embed": "^2.7.6",
+    "@editorjs/header": "^2.8.8",
+    "@editorjs/image": "^2.10.2",
+    "@editorjs/list": "^2.0.4",
+    "@editorjs/simple-image": "^1.6.0",
+    "sass-embedded": "^1.83.4"
+  }
+}
