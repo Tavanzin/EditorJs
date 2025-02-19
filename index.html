@@ -4,19 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="./css/main.scss">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&" />
   <title>Editor</title>
 </head>
 <body>
   <div class="header">
     <h1>Editor.</h1>
     <div class="btn">
-      <button id="save">Salvar</button>
+      <button id="edit" class="selected"><span class="material-symbols-outlined">
+        edit
+        </span>
+      </button>
+
+      <button id="view"><span class="material-symbols-outlined">
+        data_object
+        </span>
+      </button>
+      
+        <button id="save">Salvar</button>
       <button id="import">Impotar</button>
     </div>
   </div>
 
-  <div class="pag">
+  <div id="pag">
     <div id="editorjs"></div>
+  </div>
+
+   <div id="jsonview">
+    <div id="jsonDiv">
+      <pre id="jsonDisplay"></pre>
+    </div>
   </div>
   
   <div id="template">
@@ -28,7 +45,6 @@
       </div>
     </div>
   </div>
-  
   <script type="module" src="./script.js"></script>
 </body>
 </html>

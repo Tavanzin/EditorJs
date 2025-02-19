@@ -2,6 +2,8 @@ import EditorJs from '@editorjs/editorjs';
 import header from '@editorjs/header';
 import List from '@editorjs/list';
 import Embed from '@editorjs/embed';
+import ImageTool from '@editorjs/image';
+import Columns from '@calumk/editorjs-columns';
 
 class Spacer {
   static get toolbox() {
@@ -24,7 +26,6 @@ class Spacer {
 
 const editor = new EditorJs({
   holder: 'editorjs',
-
   tools: {
     header: {
       class: header,
@@ -58,7 +59,48 @@ const editor = new EditorJs({
     },
 
     spacer: Spacer,
-  }
+
+    image: {
+      class: ImageTool,
+      config: {
+        endpoints: {
+          byFile: "http://localhost/EditorJs/editor_php/upload_image.php"
+        },
+        field: "image",
+        types: "image/*",
+        additionalRequestData: { debug: "true" },
+        uploader: {
+          uploadByFile(file) {
+            console.log("Enviando arquivo:", file);
+            const formData = new FormData();
+            formData.append("image", file);
+    
+            return fetch("http://localhost/EditorJs/editor_php/upload_image.php", {
+              method: "POST",
+              body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+              console.log("Resposta do servidor:", result);
+              return result;
+            })
+            .catch(error => {
+              console.error("Erro no upload:", error);
+            });
+          }
+        }
+      },
+      additionalRequestData: {
+        customId: 'imagem'
+      }
+    },
+    columns: {
+      class: Columns,
+      config: {
+        columns: 2,
+      }
+    }
+  },
 });
 
 let saveBtn = document.getElementById('save');
@@ -79,7 +121,7 @@ function salvarData(codigo) {
       return;
   }
 
-  fetch("http://localhost/EditorJs/editor_php/salvar_script.php", {
+  fetch("http://localhost/EditorJs/editor_php/salvar.php", {
       method: "POST",
       headers: {
           "Content-Type": "application/json"
@@ -110,7 +152,7 @@ document.getElementById('close').addEventListener('click', function() {
 });
 
 function carregarTemplates() {
-  fetch("http://localhost/EditorJs/editor_php/carregar_script.php", {
+  fetch("http://localhost/EditorJs/editor_php/carregar.php", {
     method: "GET",
   })
   .then(response => response.json())
@@ -122,37 +164,45 @@ function carregarTemplates() {
     data.forEach(template => {
       const templateItem = document.createElement('div');
       templateItem.classList.add('template-item');
+    
+      const templateContent = document.createElement('div');    
 
-      const templateContent = document.createElement('div');
-      templateContent.innerHTML = `
-        <strong>${template.nome_arquivo}</strong>
-        <br>
-        Última alteração: ${new Date(template.ultima_alter).toLocaleString()}
-      `;
+      const versaoDiv = document.createElement('div');
+      versaoDiv.classList.add('versao');
+      versaoDiv.innerHTML = `Última alteração: ${new Date(template.ultima_alter).toLocaleString()}`;
 
       const buttonContainer = document.createElement('div');
       buttonContainer.classList.add('button-container');
-
+    
       const btn1 = document.createElement('button');
       btn1.textContent = 'Aplicar';
       btn1.addEventListener('click', function() {
-        aplicarTemplate(template.codigo)
+        aplicarTemplate(template.codigo);
       });
-      
+    
       const btn2 = document.createElement('button');
       btn2.textContent = 'Deletar';
       btn2.addEventListener('click', function() {
-        deletarTemplate(template.id)
+        deletarTemplate(template.id);
       });
-
+    
       buttonContainer.appendChild(btn1);
       buttonContainer.appendChild(btn2);
 
+      templateContent.innerHTML = `<strong>${template.nome_arquivo}</strong><br>`;
+      templateContent.appendChild(versaoDiv);
       templateContent.appendChild(buttonContainer);
-      
+    
       templateItem.appendChild(templateContent);
-
       templateList.appendChild(templateItem);
+
+      
+    const btnVersion = document.getElementById('dots');
+    addEventListener('click', function() {
+     btnVersion.classList.toggle('rotate');
+     const menu = document.getElementsByClassName('drop-down-content')[0];
+      menu.classList.toggle('view-menu');
+    })
   });
 })
 .catch(error => console.error('Erro ao carregar templates:', error));
@@ -171,7 +221,7 @@ function aplicarTemplate(codigo) {
   
   function deletarTemplate(id) {
     if (confirm('Tem certeza que deseja excluir este template?')) {
-      fetch(`http://localhost/EditorJs/editor_php/deletar_script.php?ID=${id}`, {
+      fetch(`http://localhost/EditorJs/editor_php/deletar.php?ID=${id}`, {
         method: 'GET'
       })
       .then(response => response.json())
@@ -183,7 +233,7 @@ function aplicarTemplate(codigo) {
         carregarTemplates();
         clearTemplate();
     })
-    .catch(error => {
+    .catch(error => { 
         console.error('Erro ao deletar o template:', error);
     });
 }
@@ -197,9 +247,89 @@ function clearTemplate() {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Delete") {
-      const currentBlockIndex = editor.blocks.getCurrentBlockIndex();
-      if (currentBlockIndex !== -1) {
-          editor.blocks.delete(currentBlockIndex);
+    const currentBlockIndex = editor.blocks.getCurrentBlockIndex();
+      
+    if (currentBlockIndex !== -1) {
+
+      if (deletedBlock.data.customId === 'imagem') {
+        imageUrl = currentBlockIndex.data.file?.url;
+       }
+      editor.blocks.delete(currentBlockIndex);
+      if(imageUrl) {
+        deleteImages(imageUrl);
       }
+    }
   }
 });
+
+//view code
+
+const btnView = document.getElementById('view');
+const btnEdit = document.getElementById('edit');
+
+btnView.addEventListener('click', function() {
+  changeview(this);
+})
+
+btnEdit.addEventListener('click', function() {
+  changeview(this);
+})
+
+function changeview(clickedbtn) {
+  const pag = document.getElementById('pag');
+  const jsonView = document.getElementById('jsonview');
+
+  btnEdit.classList.toggle('selected');
+  btnView.classList.toggle('selected');
+
+  if (clickedbtn === btnView) {
+    editor.save().then((outputData) => {
+      display(outputData);
+    }).catch((error) => {
+      console.log(error);
+    })
+    
+    jsonView.style.zIndex = 2;
+    pag.style.zIndex = 1;
+    } else if (clickedbtn === btnEdit) {
+      var text = document.getElementById('jsonDisplay');
+      text.content = null;
+
+      pag.style.zIndex = 2;
+      jsonView.style.zIndex = 1;
+  }
+} 
+
+function display(jsoncode){
+  var text = document.getElementById('jsonDisplay');
+  text.textContent = JSON.stringify(jsoncode, null, 2);
+}
+
+function deleteImages(deleteBlock) {
+  console.log("teste");
+  const allBlocks = editor.blocks.getBlocks();
+
+  for (let block of allBlocks) {
+    if (block.type === 'image') {
+      const imageData = block.data;
+      if (imageData.file.url === deleteBlock.file.url) {
+        console.log(deleteBlock.file.url);
+        return true;
+      } else {
+        console.log(deleteBlock.file.url);
+        fetch ('http://localhost/EditorJs/editor_php/delete_image.php', {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ imageUrl: deleteBlock.file.url })
+        })
+        .then(response => response.json())
+        .then(data => console.log('url da imagem enviado: ', data))
+        .catch(error => console.error('Erro ao enviar URL: ', error));
+      }
+    }
+  }
+
+  return false;
+}

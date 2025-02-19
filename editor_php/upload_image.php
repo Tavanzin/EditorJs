@@ -1,54 +1,53 @@
 <?php
-die; // nao esta sendo usado pq o image tool nao esta funcionando
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, X-Requested-With");
+header('Content-Type: application/json');
+header("Access-Control-Allow-Origin: *"); 
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS"); 
+header("Access-Control-Allow-Headers: Content-Type");
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
-    $uploadDirectory = 'uploads/';
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_FILES["image"])) {
+        $uploadDir = "uploads/";
+        $fileName = basename($_FILES["image"]["name"]);
+        $targetFile = $uploadDir . $fileName;
 
-    if (!is_dir($uploadDirectory)) {
-        mkdir($uploadDirectory, 0755, true);
-    }
+        $fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+        $allowedTypes = ["jpg", "jpeg", "png", "gif"];
+ 
+        if (!in_array($fileType, $allowedTypes)) {
+            echo json_encode(["success" => 0, "message" => "Formato inválido."]);
+            exit;
+        }
 
-    $file = $_FILES['file'];
-    $fileName = basename($file['name']);
-    $fileTmpPath = $file['tmp_name'];
-    $fileSize = $file['size'];
-    $fileError = $file['error'];
-    
-    ob_start();
-    var_dump($file);
-    $varDumpOutput = ob_get_clean();
+        foreach (glob($uploadDir . "*.*") as $existingFile) {
+            if (basename($existingFile) === basename($_FILES["image"]["name"])) {
+                echo json_encode([
+                    "success" => 1,
+                    "file" => ["url" => "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/" . $existingFile]
+                ]);
+                exit;
+            }
+        }
 
-    if ($fileError === UPLOAD_ERR_OK) {
-        $fileDestination = $uploadDirectory . $fileName;
-        var_dump($fileDestination);
-
-        if (move_uploaded_file($fileTmpPath, $fileDestination)) {
+        if (file_exists($targetFile)) {
             echo json_encode([
-                'success' => true,
-                'file' => [
-                    'url' => 'http://' . $_SERVER['HTTP_HOST'] . '/' . $fileDestination
-                ],
-                'var_dump' => $varDumpOutput
+                "success" => 1,
+                "file" => ["url" => $fileUrl]
+            ]);
+            exit;
+        }
+        
+        if (move_uploaded_file($_FILES["image"]["tmp_name"], $targetFile)) {
+
+            echo json_encode([
+                "success" => 1,
+                "file" => ["url" => "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/" . $targetFile],
             ]);
         } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Erro ao mover o arquivo para o diretório de uploads.'
-            ]);
+            echo json_encode(["success" => 0, "message" => "Erro ao salvar o arquivo."]);
         }
     } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Erro no upload do arquivo.'
-        ]);
+        echo json_encode(["success" => 0, "message" => "Nenhum arquivo enviado."]);
     }
 } else {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Nenhum arquivo enviado.'
-    ]);
+    echo json_encode(["success" => 0, "message" => "Método inválido."]);
 }
-?>

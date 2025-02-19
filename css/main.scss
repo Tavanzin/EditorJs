@@ -1,3 +1,6 @@
+$azul: rgb(0, 140, 210);  
+$branco2: rgb(233, 233, 233);
+
 *{
   margin: 0;
   box-sizing: border-box;
@@ -15,6 +18,10 @@ body{
   border-radius: 10px;
   text-transform: uppercase;
   padding: 0.8em;
+
+  &:hover{
+    cursor: pointer;
+  }
 }
 
 .header{
@@ -27,13 +34,40 @@ body{
   border-bottom: 0.5px solid;
 }
 
-.pag{
+.btn {
   display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  height: 100%;
+  width: 280px;
+  align-items: center;
+}
+
+#view, #edit{
+  height: 35px;
+  border-radius: 10px;
+  border: 0.1px solid rgb(0, 0, 0, 0.5);
+  background-color: transparent;
+  span{
+    font-size: 20px;
+    width: 30px;
+  }
+}
+
+.selected{
+  background-color: $azul !important;
+  color: white;
+}
+
+#pag{
+  display: flex;
+  position: absolute;
   justify-content: center;
   width: 100vw;
   min-height: calc(100vh - 70px);
   height: fit-content;
-  background-color: rgb(233, 233, 233);
+  background-color: $branco2;
+  z-index: 2;
 }
 
 #editorjs{
@@ -45,7 +79,7 @@ body{
 }
 
 #save, #import{
-  @include btns(rgb(0, 160, 240))
+  @include btns($azul);  
 }
 
 #save:hover, #import:hover{
@@ -74,7 +108,7 @@ body{
   background-color: rgba(0, 0, 0, 0.5);
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 3;
 }
 
 .modal-content {
@@ -118,7 +152,7 @@ body{
   margin: 3px 0 6px 0;
    
   button{
-    @include btns(rgb(0, 160, 240));
+    @include btns($azul);
   }
 
   button:last-child{
@@ -128,4 +162,17 @@ body{
 
 .button-container button:hover {
   cursor: pointer;
+}
+
+//view json
+
+#jsonview{
+  display: flex;
+  position: absolute;
+  background-color: white;
+  width: 100vw;
+  height: calc(100vh - 70px);
+  justify-content: left;
+  padding: 20px;
+  z-index: 1;
 }
