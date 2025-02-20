@@ -1,9 +1,10 @@
 import EditorJs from '@editorjs/editorjs';
-import header from '@editorjs/header';
+import Header from '@editorjs/header';
 import List from '@editorjs/list';
-import Embed from '@editorjs/embed';
 import ImageTool from '@editorjs/image';
+import Embed from '@editorjs/embed';
 import Columns from '@calumk/editorjs-columns';
+import Delimiter from '@editorjs/delimiter';
 
 class Spacer {
   static get toolbox() {
@@ -26,9 +27,10 @@ class Spacer {
 
 const editor = new EditorJs({
   holder: 'editorjs',
+
   tools: {
     header: {
-      class: header,
+      class: Header,
       inlineToolbar: [
         'link',
         'bold'
@@ -64,7 +66,7 @@ const editor = new EditorJs({
       class: ImageTool,
       config: {
         endpoints: {
-          byFile: "http://localhost/EditorJs/editor_php/upload_image.php"
+          byFile: "http://localhost/EditorJsV.2/EditorJs/editor_php/upload_image.php"
         },
         field: "image",
         types: "image/*",
@@ -75,7 +77,7 @@ const editor = new EditorJs({
             const formData = new FormData();
             formData.append("image", file);
     
-            return fetch("http://localhost/EditorJs/editor_php/upload_image.php", {
+            return fetch("http://localhost/EditorJsV.2/EditorJs/editor_php/upload_image.php", {
               method: "POST",
               body: formData
             })
@@ -94,12 +96,20 @@ const editor = new EditorJs({
         customId: 'imagem'
       }
     },
+
     columns: {
       class: Columns,
       config: {
-        columns: 2,
+        levels: [2, 3, 4],
+        EditorJsLibrary: EditorJs,
+        tools: {
+          header: Header,
+          image: ImageTool,
+          list: List,
+        }
       }
     }
+
   },
 });
 
@@ -111,7 +121,7 @@ saveBtn.addEventListener('click', function() {
   }).catch((error) => {
     console.log(error);
   })
-}) 
+})
 
 function salvarData(codigo) {
   const nomeArquivo = prompt("Digite o nome do template:");
@@ -121,7 +131,7 @@ function salvarData(codigo) {
       return;
   }
 
-  fetch("http://localhost/EditorJs/editor_php/salvar.php", {
+  fetch("http://localhost/EditorJsV.2/EditorJs/editor_php/salvar.php", {
       method: "POST",
       headers: {
           "Content-Type": "application/json"
@@ -149,10 +159,12 @@ document.getElementById('import').addEventListener('click', function() {
 
 document.getElementById('close').addEventListener('click', function() {
   document.getElementById('template').style.display = 'none';
+  const menu = document.getElementsByClassName('drop-down-content')[0];
+  menu.classList.remove('view-menu');
 });
 
 function carregarTemplates() {
-  fetch("http://localhost/EditorJs/editor_php/carregar.php", {
+  fetch("http://localhost/EditorJsV.2/EditorJs/editor_php/carregar.php", {
     method: "GET",
   })
   .then(response => response.json())
@@ -170,6 +182,25 @@ function carregarTemplates() {
       const versaoDiv = document.createElement('div');
       versaoDiv.classList.add('versao');
       versaoDiv.innerHTML = `Última alteração: ${new Date(template.ultima_alter).toLocaleString()}`;
+
+      const dotsButton = document.createElement('button');
+      dotsButton.id= 'dots';
+    
+      const dotsIcon = document.createElement('span');
+      dotsIcon.classList.add('material-symbols-outlined');
+      dotsIcon.textContent = 'keyboard_arrow_up';
+
+      const dropdown = document.createElement('div');
+      dropdown.id = 'dropdownid';
+      dropdown.classList.add('drop-down');
+
+      const dropdownContent = document.createElement('div');
+      dropdownContent.classList.add('drop-down-content');
+      dropdown.appendChild(dropdownContent);
+      versaoDiv.appendChild(dropdown);
+
+      dotsButton.appendChild(dotsIcon);
+      versaoDiv.appendChild(dotsButton);
 
       const buttonContainer = document.createElement('div');
       buttonContainer.classList.add('button-container');
@@ -195,17 +226,96 @@ function carregarTemplates() {
     
       templateItem.appendChild(templateContent);
       templateList.appendChild(templateItem);
+    
+    dotsButton.addEventListener('click', async function() {
+      dotsButton.classList.toggle('rotate');
+      dropdownContent.classList.toggle('view-menu');
+      if (dropdownContent.classList.contains("view-menu")) {
+        const versoes = await viewVersion(template.id);
+        if (versoes && versoes.length) {
+          displayVersions(versoes, dropdownContent, template.id);
+        }
+      }
+    });
 
-      
-    const btnVersion = document.getElementById('dots');
-    addEventListener('click', function() {
-     btnVersion.classList.toggle('rotate');
-     const menu = document.getElementsByClassName('drop-down-content')[0];
-      menu.classList.toggle('view-menu');
-    })
   });
 })
 .catch(error => console.error('Erro ao carregar templates:', error));
+}
+
+function viewVersion(id) {
+  return fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/versions.php?id=${id}`, {
+    method: "GET",
+  }) 
+    .then(response => response.json())
+    .then(data => {
+      if (data.erro) {
+        console.error(data.erro);
+        return [];
+      } else {
+        return data;
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao obter as versões:', error);
+      return [];
+    });
+}
+
+function displayVersions(versoes, content, id) {
+  content.innerHTML = "";
+  versoes.forEach(versao => {
+    const button = document.createElement('button');
+    
+    const span = document.createElement('span');
+    if (versao === 1) {
+      span.textContent = `Versão: ${versao}.0`;
+    } else {
+    span.textContent = `Versão: ${versao}`;
+    }
+    button.appendChild(span);
+
+    const icon = document.createElement('i');
+    icon.classList.add('material-symbols-outlined');
+    icon.textContent = 'delete';
+
+    button.appendChild(icon);
+
+    icon.addEventListener('click', function() {
+      if (confirm('Tem certeza que deseja excluir esta versão?')) {
+        fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/deletar.php?ID=${id}&versao=${versao}`, {
+          method: 'GET'
+        })
+        .then(data => {
+          viewVersion(id)
+            .then(novasVersoes => {
+              displayVersions(novasVersoes, content, id);
+            })
+            .catch(error => console.error('Erro ao atualizar as versões:', error));
+        })
+      }
+    });
+    
+    button.addEventListener('click', (e) => {
+      if (e.target.closest('i')) return;
+      aplicarVersao(versao, id);
+      document.getElementById('template').style.display = 'none';
+      const menu = document.getElementsByClassName('drop-down-content')[0];
+      menu.classList.remove('view-menu');
+    });
+
+    content.appendChild(button);
+  });
+}
+
+function aplicarVersao(versao, id){
+  fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/carregar.php?versao=${versao}&id=${id}`)
+    .then(response => response.json())
+    .then(data => {
+        console.log(data[0].codigo);
+        editor.render(data[0].codigo);
+    })
+    .catch(error => console.error("Erro ao carregar template:", error));
 }
 
 function aplicarTemplate(codigo) {
@@ -219,9 +329,9 @@ function aplicarTemplate(codigo) {
     });
   }
   
-  function deletarTemplate(id) {
+  function deletarTemplate(id, versao) {
     if (confirm('Tem certeza que deseja excluir este template?')) {
-      fetch(`http://localhost/EditorJs/editor_php/deletar.php?ID=${id}`, {
+      fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/deletar.php?ID=${id}`, {
         method: 'GET'
       })
       .then(response => response.json())
@@ -260,6 +370,20 @@ document.addEventListener("keydown", (event) => {
       }
     }
   }
+});
+
+document.addEventListener('click', (event) => {
+  const dropdowns = document.getElementsByClassName('drop-down-content');
+  Array.from(dropdowns).forEach((dropdown) => {
+  if (event.target.closest('button')) return;
+  if (dropdown.classList.contains("view-menu")){
+    if (!event.target.closest('.drop-down-content')) {
+      const dotsButton = document.getElementById('dots');
+      dotsButton.classList.toggle('rotate');
+      dropdown.classList.remove('view-menu');
+    } 
+  }
+  })
 });
 
 //view code
@@ -317,7 +441,7 @@ function deleteImages(deleteBlock) {
         return true;
       } else {
         console.log(deleteBlock.file.url);
-        fetch ('http://localhost/EditorJs/editor_php/delete_image.php', {
+        fetch ('http://localhost/EditorJsV.2/EditorJs/editor_php/delete_image.php', {
           method: "POST",
           headers: {
             'Content-Type': 'application/json'

@@ -1,12 +1,12 @@
-$azul: rgb(0, 140, 210);  
+$azul: rgb(0, 140, 210);
 $branco2: rgb(233, 233, 233);
 
-*{
+* {
   margin: 0;
   box-sizing: border-box;
 }
 
-body{
+body {
   height: 100%;
   font-family: 'Arial';
 }
@@ -18,15 +18,14 @@ body{
   border-radius: 10px;
   text-transform: uppercase;
   padding: 0.8em;
-
-  &:hover{
+  &:hover {
     cursor: pointer;
   }
 }
 
-.header{
+.header {
   display: flex;
-  justify-content : space-between;
+  justify-content: space-between;
   align-items: center;
   width: 100vw;
   height: 70px;
@@ -40,26 +39,25 @@ body{
   align-items: center;
   height: 100%;
   width: 280px;
-  align-items: center;
 }
 
-#view, #edit{
+#view, #edit {
   height: 35px;
   border-radius: 10px;
-  border: 0.1px solid rgb(0, 0, 0, 0.5);
+  border: 0.1px solid rgba(0, 0, 0, 0.5);
   background-color: transparent;
-  span{
+  span {
     font-size: 20px;
     width: 30px;
   }
 }
 
-.selected{
+.selected {
   background-color: $azul !important;
   color: white;
 }
 
-#pag{
+#pag {
   display: flex;
   position: absolute;
   justify-content: center;
@@ -70,23 +68,22 @@ body{
   z-index: 2;
 }
 
-#editorjs{
+#editorjs {
   background-color: white;
   width: 47%;
   padding: 15px 0;
-  margin-top: 1em;
-  margin-bottom: 1em;
+  margin: 1em 0;
 }
 
-#save, #import{
-  @include btns($azul);  
+#save, #import {
+  @include btns($azul);
 }
 
-#save:hover, #import:hover{
+#save:hover, #import:hover {
   cursor: pointer;
 }
 
-.btnclose{
+.btnclose {
   display: flex;
   justify-content: right;
   align-items: center;
@@ -111,6 +108,101 @@ body{
   z-index: 3;
 }
 
+.versao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: auto;
+}
+
+.drop-down {
+  position: relative;
+  display: inline-block;
+}
+
+.drop-down-content {
+  flex-direction: column;
+  position: absolute;
+  background-color: white;
+  border-radius: 10px;
+  border: 0.5px solid rgba(0, 0, 0, 0.5);
+  width: 170px;
+  top: 15px;
+  right: -50px;
+  max-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  z-index: 4;
+  transition: max-height 1s, visibility 0.4s, opacity 0.5s;
+}
+
+.view-menu {
+  visibility: visible;
+  opacity: 1;
+  min-height: 100px;
+  max-height: 150px;
+
+  button{
+    height: 25px !important;
+    opacity: 1 !important;
+  }
+}
+
+.drop-down-content button {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 100%;
+  height: 0;
+  opacity: 0;
+  border: none;
+  border-bottom: 0.5px solid;
+  transition: 0.25s;
+  background-color: transparent;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  span {
+    width: 70%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:last-child{
+    border: none;
+  }
+  i{
+    transition: 1s;
+    border-radius: 2px;
+    
+    &:hover{
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+#dots {
+  background-color: transparent;
+  border: none;
+  position: absolute;
+  right: 14px;
+  transition: 0.6s;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.rotate {
+  transform: rotate(180deg);
+}
+
 .modal-content {
   background-color: white;
   padding: 10px;
@@ -123,39 +215,38 @@ body{
   display: flex;
   flex-direction: column;
 
-  h3{
+  h3 {
     margin: 7px 0;
   }
 }
 
-#templateList{
+#templateList {
   border-top: 1px solid;
   width: calc(100% + 20px);
   margin: 0 -10px;
   flex-grow: 1;
 }
 
-.template-item{
+.template-item {
   width: 100%;
   margin-top: 7px;
 
   &:not(:last-child) {
-    border-bottom: 1px solid rgb(0, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
   }
 }
 
-.button-container{
+.button-container {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
   margin: 3px 0 6px 0;
-   
-  button{
+
+  button {
     @include btns($azul);
   }
-
-  button:last-child{
+  button:last-child {
     @include btns(rgb(200, 0, 0));
   }
 }
@@ -164,9 +255,7 @@ body{
   cursor: pointer;
 }
 
-//view json
-
-#jsonview{
+#jsonview {
   display: flex;
   position: absolute;
   background-color: white;
@@ -175,4 +264,8 @@ body{
   justify-content: left;
   padding: 20px;
   z-index: 1;
+}
+
+.ce-editorjsColumns_col{
+  border: 0.1px solid rgba(0, 0, 0, 0.15);
 }

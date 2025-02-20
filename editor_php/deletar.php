@@ -17,8 +17,20 @@ if ($conn->connect_error) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-  if (isset($_GET['ID'])) {
+    if (isset($_GET['ID']) && isset($_GET['versao'])){
+      $id = $_GET['ID'];
+      $versao = $_GET['versao'];
+
+      $stmt = $conn->prepare("DELETE FROM versao_templates WHERE template_id = ? AND ROUND(versao, 1) = ROUND(?, 1)");
+      $stmt->bind_param("id", $id, $versao);
+      $stmt->execute();
+    } elseif (isset($_GET['ID'])) {
     $id = $_GET['ID'];
+    $stmtVersoes = $conn->prepare("DELETE FROM versao_templates WHERE template_id = ?");
+    $stmtVersoes->bind_param("s", $id);
+    $stmtVersoes->execute();
+    $stmtVersoes->close();
+
     $stmt = $conn->prepare("DELETE FROM templates WHERE id = ?");
     $stmt->bind_param("s", $id);
 
