@@ -73,7 +73,6 @@ const editor = new EditorJs({
         additionalRequestData: { debug: "true" },
         uploader: {
           uploadByFile(file) {
-            console.log("Enviando arquivo:", file);
             const formData = new FormData();
             formData.append("image", file);
     
@@ -103,9 +102,72 @@ const editor = new EditorJs({
         levels: [2, 3, 4],
         EditorJsLibrary: EditorJs,
         tools: {
-          header: Header,
-          image: ImageTool,
-          list: List,
+          header: {
+            class: Header,
+            inlineToolbar: [
+              'link',
+              'bold'
+            ],
+            config: {
+            levels: [2, 3, 4],
+            defaultLevel: 3
+            },
+          },
+      
+          list: {
+            class: List,
+            inlineToolbar: [
+              'link',
+              'bold'
+            ]
+          },
+      
+          embed: {
+            class: Embed,
+            inlineToolbar: false,
+            config: {
+              services: {
+                youtube: true,
+                coub: true
+              }
+            },
+          },
+      
+          spacer: Spacer,
+      
+          image: {
+            class: ImageTool,
+            config: {
+              endpoints: {
+                byFile: "http://localhost/EditorJsV.2/EditorJs/editor_php/upload_image.php"
+              },
+              field: "image",
+              types: "image/*",
+              additionalRequestData: { debug: "true" },
+              uploader: {
+                uploadByFile(file) {
+                  const formData = new FormData();
+                  formData.append("image", file);
+          
+                  return fetch("http://localhost/EditorJsV.2/EditorJs/editor_php/upload_image.php", {
+                    method: "POST",
+                    body: formData
+                  })
+                  .then(response => response.json())
+                  .then(result => {
+                    console.log("Resposta do servidor:", result);
+                    return result;
+                  })
+                  .catch(error => {
+                    console.error("Erro no upload:", error);
+                  });
+                }
+              }
+            },
+            additionalRequestData: {
+              customId: 'imagem'
+            }
+          },
         }
       }
     }
@@ -312,22 +374,39 @@ function aplicarVersao(versao, id){
   fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/carregar.php?versao=${versao}&id=${id}`)
     .then(response => response.json())
     .then(data => {
-        console.log(data[0].codigo);
         editor.render(data[0].codigo);
     })
     .catch(error => console.error("Erro ao carregar template:", error));
 }
 
-function aplicarTemplate(codigo) {
-  editor.render(codigo)
-    .then(() => {
-      console.log("Template aplicado com sucesso.");
-      document.getElementById('template').style.display = 'none';
-    })
-    .catch((error) => {
-      console.error("Erro ao aplicar o template:", error);
+async function aplicarTemplate(codigo) {
+  try {
+    const blocks = codigo.blocks || [];
+    const imageUrls = blocks
+      .filter(block => block.type === 'image')
+      .map(block => block.data?.file?.url)
+      .filter(url => url);
+
+    const response = await fetch('http://localhost/EditorJsV.2/EditorJs/editor_php/download_image.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imagens: imageUrls })
     });
+
+    const resultado = await response.json();
+
+    if (!resultado.sucesso) {
+      console.error("Alguma verificação falhou:", resultado);
+      return;
+    }
+
+  await editor.render(codigo);
+
+    document.getElementById('template').style.display = 'none';
+  } catch (error) {
+    console.error("Erro ao aplicar o template:", error);
   }
+}
   
   function deletarTemplate(id, versao) {
     if (confirm('Tem certeza que deseja excluir este template?')) {
@@ -358,16 +437,19 @@ function clearTemplate() {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Delete") {
     const currentBlockIndex = editor.blocks.getCurrentBlockIndex();
-      
+    const block = (editor.blocks.getBlockByIndex(currentBlockIndex));
+
     if (currentBlockIndex !== -1) {
 
-      if (deletedBlock.data.customId === 'imagem') {
-        imageUrl = currentBlockIndex.data.file?.url;
+      if (block.name === 'image') {
+        const imgElement = block.holder.querySelector('img');
+        const imageUrl = imgElement ? imgElement.src : null;
+        if (imageUrl) {
+          deleteImages(imageUrl);
+        }
        }
+
       editor.blocks.delete(currentBlockIndex);
-      if(imageUrl) {
-        deleteImages(imageUrl);
-      }
     }
   }
 });
@@ -375,6 +457,7 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener('click', (event) => {
   const dropdowns = document.getElementsByClassName('drop-down-content');
   Array.from(dropdowns).forEach((dropdown) => {
+
   if (event.target.closest('button')) return;
   if (dropdown.classList.contains("view-menu")){
     if (!event.target.closest('.drop-down-content')) {
@@ -429,31 +512,31 @@ function display(jsoncode){
   text.textContent = JSON.stringify(jsoncode, null, 2);
 }
 
-function deleteImages(deleteBlock) {
-  console.log("teste");
-  const allBlocks = editor.blocks.getBlocks();
-
-  for (let block of allBlocks) {
-    if (block.type === 'image') {
-      const imageData = block.data;
-      if (imageData.file.url === deleteBlock.file.url) {
-        console.log(deleteBlock.file.url);
-        return true;
-      } else {
-        console.log(deleteBlock.file.url);
-        fetch ('http://localhost/EditorJsV.2/EditorJs/editor_php/delete_image.php', {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ imageUrl: deleteBlock.file.url })
-        })
-        .then(response => response.json())
-        .then(data => console.log('url da imagem enviado: ', data))
-        .catch(error => console.error('Erro ao enviar URL: ', error));
+function deleteImages(imageUrl) {
+  editor.save().then(data => {
+    const imageUrlCont = decodeURIComponent(imageUrl);
+    const blocks = data.blocks;
+    const blocksWithSameUrl = blocks.filter(block => {
+      if (block.type === 'image') {
+        return block.data.file.url === imageUrlCont;
       }
-    }
-  }
+      return false;
+    });
 
-  return false;
+    
+    if (blocksWithSameUrl.length > 1) {
+      return;
+    }
+
+    fetch('http://localhost/EditorJsV.2/EditorJs/editor_php/delete_image.php', {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ imageUrl })
+    })
+    .then(response => response.json())
+    .then(data => console.log('Imagem deletada:', data))
+    .catch(error => console.error('Erro ao deletar a imagem:', error));
+  }).catch(error => console.error("Erro ao salvar os dados do editor:", error));
 }
