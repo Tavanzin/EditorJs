@@ -26,6 +26,14 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
       $stmt->execute();
     } elseif (isset($_GET['ID'])) {
     $id = $_GET['ID'];
+
+    $stmtArquivo = $conn->prepare("SELECT nome_arquivo FROM templates WHERE id = ?");
+    $stmtArquivo->bind_param("s", $id);
+    $stmtArquivo->execute();
+    $stmtArquivo->bind_result($nome_arquivo);
+    $stmtArquivo->fetch();
+    $stmtArquivo->close();
+
     $stmtVersoes = $conn->prepare("DELETE FROM versao_templates WHERE template_id = ?");
     $stmtVersoes->bind_param("s", $id);
     $stmtVersoes->execute();
@@ -48,7 +56,8 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
       
         echo json_encode(["success" => true, 
         "message" => "Template deletado com sucesso.",
-        "reset" => $auto_increment_reset
+        "reset" => $auto_increment_reset,
+        "nome_arquivo" => $nome_arquivo
       ]);
       } else {
         echo json_encode(["success" => false, "message" => "Erro ao deletar template: " . $stmt->error]);

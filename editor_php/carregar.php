@@ -16,10 +16,10 @@ if ($conn->connect_error) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-  if (isset($_GET['versao'])) {
+    if (isset($_GET['versao'])) {
     $versao = floatval($_GET['versao']);
     $id = $_GET['id'];
-    $stmt = $conn->prepare("SELECT codigo FROM versao_templates WHERE ROUND(versao, 1) = ROUND(?, 1) AND template_id = ?");
+    $stmt = $conn->prepare("SELECT codigo, nome_arquivo FROM versao_templates WHERE versao = ? AND template_id = ?");
     $stmt->bind_param("di", $versao, $id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -28,7 +28,8 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     
     if ($row = $result->fetch_assoc()) {
       $template[] = [
-        "codigo" => json_decode($row["codigo"])
+        "codigo" => json_decode($row["codigo"]),
+        "nome_arquivo" => $row["nome_arquivo"]
       ];
     }
     echo json_encode($template);

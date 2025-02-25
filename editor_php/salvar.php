@@ -40,14 +40,25 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
 
         $stmt_versao->close();
 
-        if ($versao_atual == 0) {
-            $nova_versao = "1.0";
+        var_dump($versao_atual);
+        
+        if ($versao_atual == "0") {
+            $nova_versao = 1.0;
         } else {
-            $versao_array = explode(".", $versao_atual);
-            $nova_versao = $versao_array[0] . "." . ($versao_array[1] + 1);
-            if ($versao_array[1] == 9) {
-                $nova_versao = ($versao_array[0] + 1) . ".0";
+            $versao_atual_float = floatval($versao_atual);
+            $versao_partes = explode('.', number_format($versao_atual_float, 1, '.', ''));
+            
+            $major = intval($versao_partes[0]);
+            $minor = isset($versao_partes[1]) ? intval($versao_partes[1]) : 0;
+            
+            if ($minor < 9) {
+                $minor++;
+            } else {
+                $major++;
+                $minor = 0;
             }
+            
+            $nova_versao = floatval("{$major}.{$minor}");
         }
 
         $stmt_hist=$conn->prepare("INSERT INTO versao_templates (template_id, versao, codigo) VALUES (?, ?, ?)");

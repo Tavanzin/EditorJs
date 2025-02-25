@@ -9,7 +9,12 @@
 </head>
 <body>
   <div class="header">
-    <h1>Editor.</h1>
+    <div class="left">
+      <h1>Editor.</h1>
+
+      <button id="new-project">+</button>
+    </div>
+
     <div class="btn">
       <button id="edit" class="selected"><span class="material-symbols-outlined">
         edit
@@ -42,6 +47,20 @@
       <div id="templateList"></div>
       <div class="btnclose">
         <button id="close">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="templateSelect">
+    <div class="modal-content">
+      <h3>Selecione um Template:</h3>
+      <div id="templateSelectList"></div>
+      <div class="btnActions">
+        <button id="newSave">Novo</button>
+        <div class="btnActions">
+          <button id="saveAction">Salvar</button>
+          <button id="closeSelect">Fechar</button>
+        </div>
       </div>
     </div>
   </div>
