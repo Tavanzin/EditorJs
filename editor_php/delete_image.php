@@ -16,7 +16,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $filename = basename($filename);
     $filename = urldecode($filename);
 
-    $filepath = 'uploads/' . $filename;
+    if (isset($input['globalId'])){
+        $id = $input['globalId'];
+        $filepath = 'uploads/'. $id . '/' . $filename;
+    } else {
+        $filepath = 'uploads/temp/' . $filename;
+    }
 
     if (!file_exists($filepath)) {
         echo json_encode(["success" => 0, "message" => "Arquivo não encontrado."]);

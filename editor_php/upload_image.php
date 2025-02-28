@@ -6,9 +6,14 @@ header("Access-Control-Allow-Headers: Content-Type");
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_FILES["image"])) {
-        $uploadDir = "uploads/";
+
+        $uploadDir = "uploads/temp/";
         $fileName = basename($_FILES["image"]["name"]);
         $targetFile = $uploadDir . $fileName;
+
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
 
         $fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
         $allowedTypes = ["jpg", "jpeg", "png", "gif"];
@@ -41,6 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             echo json_encode([
                 "success" => 1,
                 "file" => ["url" => "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/" . $targetFile],
+                "image" => $fileName
             ]);
         } else {
             echo json_encode(["success" => 0, "message" => "Erro ao salvar o arquivo."]);

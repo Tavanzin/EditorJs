@@ -23,7 +23,12 @@
     "@editorjs/header": "^2.8.8",
     "@editorjs/image": "^2.10.2",
     "@editorjs/list": "^2.0.4",
+    "@editorjs/paragraph": "^2.11.7",
     "@editorjs/simple-image": "^1.6.0",
-    "sass-embedded": "^1.83.4"
+    "bootstrap": "^5.3.3",
+    "sas": "^3.0.4",
+    "sass": "^1.85.1",
+    "sass-embedded": "^1.83.4",
+    "skm-flipbox": "^1.0.3"
   }
 }

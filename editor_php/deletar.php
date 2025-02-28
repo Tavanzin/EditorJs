@@ -4,6 +4,23 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
+function deleteDir($dirPath) {
+  if (!is_dir($dirPath)) {
+      return;
+  }
+
+  $files = glob($dirPath . '*', GLOB_MARK);
+  foreach ($files as $file) {
+      if (is_dir($file)) {
+          deleteDir($file);
+      } else {
+          unlink($file);
+      }
+  }
+  rmdir($dirPath);
+}
+
+
 
 $servername = "localhost";
 $username = "root";
@@ -42,6 +59,8 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     $stmt = $conn->prepare("DELETE FROM templates WHERE id = ?");
     $stmt->bind_param("s", $id);
 
+    $dirPath = 'uploads/' . $id . '/';
+    deleteDir($dirPath);
     
     if ($stmt->execute()) {
       $result = $conn->query("SELECT COUNT(*) AS total FROM templates");

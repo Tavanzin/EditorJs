@@ -18,6 +18,52 @@ body {
   border-bottom: 0.5px solid;
 }
 
+.left {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  height: 100%;
+}
+.left button {
+  position: relative;
+  width: 25px;
+  height: 25px;
+  background-color: transparent;
+  font-size: 23px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.5px solid transparent;
+  border-radius: 0;
+  transition: border 0.5s ease-in-out;
+}
+.left button:hover {
+  border: 0.5px solid rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.left button:hover::after {
+  content: "Criar novo template";
+  position: absolute;
+  top: 115%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgb(51, 51, 51);
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  animation: fadeIn 0.3s forwards;
+  z-index: 20;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
 .btn {
   display: flex;
   justify-content: space-evenly;
@@ -85,6 +131,29 @@ body {
   margin-top: auto;
 }
 
+.btnActions {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  width: 100%;
+  margin-top: auto;
+  gap: 7px;
+}
+.btnActions button {
+  background-color: rgb(0, 140, 210);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  text-transform: uppercase;
+  padding: 0.8em;
+}
+.btnActions button:hover {
+  cursor: pointer;
+}
+.btnActions button:last-child {
+  background-color: rgb(200, 0, 0);
+}
+
 #close {
   background-color: rgb(200, 0, 0);
   color: white;
@@ -110,12 +179,36 @@ body {
   z-index: 3;
 }
 
+#templateSelect {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 3;
+}
+
 .versao {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: auto;
+}
+.versao span {
+  position: absolute;
+  right: 14px;
+  transition: 0.6s;
+}
+.versao span:hover {
+  cursor: pointer;
+}
+.versao .rotate {
+  transform: rotate(180deg);
 }
 
 .drop-down {
@@ -130,14 +223,49 @@ body {
   border-radius: 10px;
   border: 0.5px solid rgba(0, 0, 0, 0.5);
   width: 170px;
-  top: 15px;
-  right: -50px;
+  top: 13px;
+  right: -55px;
   max-height: 0;
   opacity: 0;
   visibility: hidden;
   overflow: hidden;
   z-index: 4;
   transition: max-height 1s, visibility 0.4s, opacity 0.5s;
+}
+.drop-down-content button {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 0;
+  width: 100%;
+  height: 0;
+  opacity: 0;
+  border: none;
+  border-bottom: 0.5px solid;
+  transition: 0.25s;
+  background-color: transparent;
+}
+.drop-down-content button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.drop-down-content button span {
+  position: static;
+  width: 70%;
+  height: -moz-max-content;
+  height: max-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.drop-down-content button:last-child {
+  border: none;
+}
+.drop-down-content button i {
+  transition: 1s;
+  border-radius: 2px;
+}
+.drop-down-content button i:hover {
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .view-menu {
@@ -149,37 +277,6 @@ body {
 .view-menu button {
   height: 25px !important;
   opacity: 1 !important;
-}
-
-.drop-down-content button {
-  width: 100%;
-  height: 0;
-  opacity: 0;
-  border: none;
-  border-bottom: 0.5px solid;
-  transition: 0.25s;
-  background-color: transparent;
-}
-.drop-down-content button:hover {
-  background-color: rgba(0, 0, 0, 0.15);
-}
-.drop-down-content button:last-child {
-  border: none;
-}
-
-#dots {
-  background-color: transparent;
-  border: none;
-  position: absolute;
-  right: 14px;
-  transition: 0.6s;
-}
-#dots:hover {
-  cursor: pointer;
-}
-
-.rotate {
-  transform: rotate(180deg);
 }
 
 .modal-content {
@@ -198,19 +295,55 @@ body {
   margin: 7px 0;
 }
 
-#templateList {
+#templateList, #templateSelectList {
   border-top: 1px solid;
   width: calc(100% + 20px);
   margin: 0 -10px;
   flex-grow: 1;
 }
 
+#templateSelectList .template-item {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
 .template-item {
   width: 100%;
   margin-top: 7px;
+  margin-bottom: 7px;
+  padding-bottom: 7px;
 }
 .template-item:not(:last-child) {
   border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.btnImport {
+  display: flex;
+  justify-content: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btnImport button {
+  background-color: rgb(0, 140, 210);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  text-transform: uppercase;
+  padding: 0.8em;
+}
+.btnImport button:hover {
+  cursor: pointer;
+}
+.btnImport button:last-child {
+  background-color: rgb(200, 0, 0);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  text-transform: uppercase;
+  padding: 0.8em;
+}
+.btnImport button:last-child:hover {
+  cursor: pointer;
 }
 
 .button-container {
@@ -256,4 +389,30 @@ body {
   justify-content: left;
   padding: 20px;
   z-index: 1;
+}
+
+.temp-selected {
+  background-color: rgb(220, 220, 230);
+}
+
+.ce-editorjsColumns_col {
+  border: 0.1px solid rgba(0, 0, 0, 0.15);
+  transition: 0.3s;
+}
+.ce-editorjsColumns_col:hover {
+  border: 0.5px solid rgb(0, 140, 210);
+}
+
+.ce-block__content {
+  border: 0.5px solid transparent;
+  transition: 0.3s;
+}
+.ce-block__content:hover {
+  border: 0.5px solid rgb(0, 140, 210);
+}
+.ce-block__content:has(.ce-editorjsColumns_wrapper) {
+  border: none !important;
+}
+.ce-block__content:has(.ce-editorjsColumns_wrapper):hover {
+  border: none !important;
 }/*# sourceMappingURL=main.css.map */

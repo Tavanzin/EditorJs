@@ -310,6 +310,7 @@ body {
 }
 #templateSelectList .template-item{
   cursor: pointer;
+  transition: 0.2s;
 }
 
 .template-item {
@@ -368,10 +369,31 @@ body {
   z-index: 1;
 }
 
-.ce-editorjsColumns_col{
-  border: 0.1px solid rgba(0, 0, 0, 0.15);
-}
-
 .temp-selected{
   background-color: rgb(220, 220, 230);
+}
+
+.ce-editorjsColumns_col{
+  border: 0.1px solid rgba(0, 0, 0, 0.15);
+  transition: 0.3s;
+
+  &:hover {
+    border: 0.5px solid rgb(0, 140, 210);
+  }
+}
+
+.ce-block__content {
+  border: 0.5px solid transparent;
+  transition: 0.3s;
+
+  &:hover {
+    border: 0.5px solid rgb(0, 140, 210);
+  }
+
+  &:has(.ce-editorjsColumns_wrapper) {
+    border: none !important;
+    &:hover {
+      border: none !important;
+    }
+  }
 }
