@@ -4,30 +4,110 @@ import List from '@editorjs/list';
 import ImageTool from '@editorjs/image';
 import Embed from '@editorjs/embed';
 import Columns from '@calumk/editorjs-columns';
-import CarouselTool from './Plugins/Carousel/Carousel.js'; 
+import CarouselTool from './Plugins/Carousel/Carousel.js';
+import Paragraph from '@editorjs/paragraph';
+
+const currentPath = window.location.href.toString().split(window.location.host)[1];
 
 class Spacer {
   static get toolbox() {
     return {
       title: "Espaço",
-      icon: "⬜",
+      icon: "<span class='material-symbols-outlined'>crop_7_5</span>",
     };
   }
 
-  render() {
-    const div = document.createElement("div");
-    div.style.height = "30px";
-    return div;
+  constructor({ data }) {
+    this.data = {
+      height: data?.height !== undefined ? data.height : 80,
+    };
+    this.wrapper = null;
   }
 
+  render() {
+    this.wrapper = document.createElement("div");
+    this.wrapper.style.height = `${this.data.height}px`;
+    this.wrapper.style.backgroundColor = 'transparent';
+    return this.wrapper;
+  }
+
+  renderSettings() {
+    const wrapper = document.createElement('div');
+    wrapper.style.display = "flex";
+    wrapper.style.flexDirection = "column";
+
+    const sizeButton = document.createElement('button');
+    sizeButton.classList.add('inline-btn');
+
+    const sizeIcon = document.createElement('span');
+    sizeIcon.classList.add('material-symbols-outlined');
+    sizeIcon.textContent = 'Straighten';
+    sizeButton.appendChild(sizeIcon);
+
+    const sizeText = document.createElement('span');
+    sizeText.textContent = 'Tamanho';
+    sizeButton.appendChild(sizeText);
+
+    sizeButton.addEventListener('click', () => {
+      this.showModal('Definir Tamanho', this.data.height, (value) => {
+        if (value) {
+          this.data.height = parseInt(value, 10);
+          this.wrapper.style.height = `${this.data.height}px`;
+        }
+      });
+    });
+
+    wrapper.appendChild(sizeButton);
+    return wrapper;
+  }
+
+  showModal(title, defaultValue, callback) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    const heading = document.createElement('h2');
+    heading.textContent = title;
+    modal.appendChild(heading);
+    const divInput = document.createElement('div');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = defaultValue;
+    divInput.appendChild(input);
+    const submitButton = document.createElement('button');
+    submitButton.textContent = 'OK';
+    divInput.appendChild(submitButton);
+    modal.appendChild(divInput);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    const submit = () => {
+      const value = input.value;
+      callback(value);
+      document.body.removeChild(overlay);
+    };
+
+    submitButton.addEventListener('click', submit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        submit();
+      }
+    });
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        document.body.removeChild(overlay);
+      }
+    });
+  }
+
+
   save() {
-    return {};
+    return this.data.height;
   }
 }
 
-
 const editor = new EditorJs({
   holder: 'editorjs',
+  defaultBlock: 'paragraph',
 
   tools: {
     header: {
@@ -36,9 +116,20 @@ const editor = new EditorJs({
         'link',
         'bold'
       ],
+      toolbox: {
+        title: 'Header',
+      },
       config: {
-      levels: [2, 3, 4],
-      defaultLevel: 3
+        levels: [2, 3, 4],
+        defaultLevel: 3
+      },
+    },
+
+    paragraph: {
+      class: Paragraph,
+      inlineToolbar: true,
+      toolbox: {
+        title: 'Parágrafo'
       },
     },
 
@@ -61,13 +152,99 @@ const editor = new EditorJs({
       },
     },
 
-    spacer: Spacer,
+    columns: {
+      class: Columns,
+      config: {
+        levels: [2, 3],
+        EditorJsLibrary: EditorJs,
+        tools: {
+          header: {
+            class: Header,
+            inlineToolbar: [
+              'link',
+              'bold'
+            ],
+            config: {
+            levels: [2, 3, 4],
+            defaultLevel: 3
+            },
+          },
+
+          list: {
+            class: List,
+            inlineToolbar: [
+              'link',
+              'bold'
+            ]
+          },
+
+          embed: {
+            class: Embed,
+            inlineToolbar: false,
+            config: {
+              services: {
+                youtube: true,
+                coub: true
+              }
+            },
+          },
+
+          spacer: Spacer,
+
+          image: {
+            class: ImageTool,
+            config: {
+              endpoints: {
+                byFile: "http://localhost/EditorJs/editor_php/upload_image.php"
+              },
+              field: "image",
+              types: "image/*",
+              additionalRequestData: { debug: "true" },
+              uploader: {
+                uploadByFile(file) {
+                  const formData = new FormData();
+                  formData.append("image", file);
+
+                  return fetch("http://localhost/EditorJs/editor_php/upload_image.php", {
+                    method: "POST",
+                    body: formData
+                  })
+                  .then(response => response.json())
+                  .then(result => {
+                    console.log("Resposta do servidor:", result);
+                    return result;
+                  })
+                  .catch(error => {
+                    console.error("Erro no upload:", error);
+                  });
+                }
+              }
+            },
+            additionalRequestData: {
+              customId: 'imagem'
+            }
+          },
+
+          Carousle: {
+            class: CarouselTool,
+            config: {
+              deleteImages: deleteImages,
+            }
+          }
+        }
+      }
+    },
+
+    spacer:{
+      class: Spacer,
+
+    },
 
     image: {
       class: ImageTool,
       config: {
         endpoints: {
-          byFile: "http://localhost/EditorJsV.2/EditorJs/editor_php/upload_image.php"
+          byFile: "http://localhost/EditorJs/editor_php/upload_image.php"
         },
         field: "image",
         types: "image/*",
@@ -76,8 +253,8 @@ const editor = new EditorJs({
           uploadByFile(file) {
             const formData = new FormData();
             formData.append("image", file);
-    
-            return fetch("http://localhost/EditorJsV.2/EditorJs/editor_php/upload_image.php", {
+
+            return fetch("http://localhost/EditorJs/editor_php/upload_image.php", {
               method: "POST",
               body: formData
             })
@@ -97,83 +274,12 @@ const editor = new EditorJs({
       }
     },
 
-    columns: {
-      class: Columns,
-      config: {
-        levels: [2, 3],
-        EditorJsLibrary: EditorJs,
-        tools: {
-          header: {
-            class: Header,
-            inlineToolbar: [
-              'link',
-              'bold'
-            ],
-            config: {
-            levels: [2, 3, 4],
-            defaultLevel: 3
-            },
-          },
-      
-          list: {
-            class: List,
-            inlineToolbar: [
-              'link',
-              'bold'
-            ]
-          },
-      
-          embed: {
-            class: Embed,
-            inlineToolbar: false,
-            config: {
-              services: {
-                youtube: true,
-                coub: true
-              }
-            },
-          },
-      
-          spacer: Spacer,
-      
-          image: {
-            class: ImageTool,
-            config: {
-              endpoints: {
-                byFile: "http://localhost/EditorJsV.2/EditorJs/editor_php/upload_image.php"
-              },
-              field: "image",
-              types: "image/*",
-              additionalRequestData: { debug: "true" },
-              uploader: {
-                uploadByFile(file) {
-                  const formData = new FormData();
-                  formData.append("image", file);
-          
-                  return fetch("http://localhost/EditorJsV.2/EditorJs/editor_php/upload_image.php", {
-                    method: "POST",
-                    body: formData
-                  })
-                  .then(response => response.json())
-                  .then(result => {
-                    console.log("Resposta do servidor:", result);
-                    return result;
-                  })
-                  .catch(error => {
-                    console.error("Erro no upload:", error);
-                  });
-                }
-              }
-            },
-            additionalRequestData: {
-              customId: 'imagem'
-            }
-          },
-        }
-      }
-    },
-
-    Carousel: CarouselTool,
+    Carousel: {
+    class: CarouselTool,
+    config: {
+      deleteImages: deleteImages
+    }
+    }
   },
 });
 
@@ -218,7 +324,7 @@ function salvarData(codigo, nome, reabrirSelect = true) {
     nomeArquivo = nome;
     nome_arquivo_atual = nome;
   }
-  fetch("http://localhost/EditorJsV.2/EditorJs/editor_php/salvar.php", {
+  fetch("http://localhost/EditorJs/editor_php/salvar.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ codigo: codigo, nome_arquivo: nomeArquivo, id: globalId }),
@@ -239,6 +345,7 @@ function salvarData(codigo, nome, reabrirSelect = true) {
 }
 
 document.getElementById('import').addEventListener('click', function() {
+  console.log(currentPath);
   document.getElementById('template').style.display = 'flex';
   carregarTemplatesImport();
 });
@@ -249,29 +356,29 @@ document.getElementById('close').addEventListener('click', function() {
 });
 
 function carregarTemplatesGeneric(options) {
-  fetch("http://localhost/EditorJsV.2/EditorJs/editor_php/carregar.php", { method: "GET" })
+  fetch("http://localhost/EditorJs/editor_php/carregar.php", { method: "GET" })
     .then(response => response.json())
     .then(data => {
       const container = document.getElementById(options.containerId);
       container.innerHTML = "";
-      
+
       data.forEach(template => {
         const templateItem = document.createElement("div");
         templateItem.classList.add("template-item");
-        
+
         const templateContent = document.createElement("div");
         templateContent.innerHTML = `<strong>${template.nome_arquivo}</strong>`;
-        
+
         const versaoDiv = document.createElement("div");
         versaoDiv.classList.add('versao');
         versaoDiv.innerHTML = `Última alteração: ${new Date(template.ultima_alter).toLocaleString()}`;
-        
+
         templateItem.appendChild(templateContent);
         templateItem.appendChild(versaoDiv);
-        
+
         const btns = document.createElement("div");
         btns.classList.add("btnImport");
-        
+
         if(options.onAplicar) {
           const btnAplicar = document.createElement("button");
           btnAplicar.textContent = "Aplicar";
@@ -281,7 +388,7 @@ function carregarTemplatesGeneric(options) {
           });
           btns.appendChild(btnAplicar);
         }
-        
+
         if(options.onDeletar) {
           const btnDeletar = document.createElement("button");
           btnDeletar.textContent = "Deletar";
@@ -292,11 +399,11 @@ function carregarTemplatesGeneric(options) {
           btns.appendChild(btnDeletar);
           templateItem.appendChild(btns);
         }
-        
+
         if(options.onSelecionar) {
           templateItem.addEventListener("click", () => options.onSelecionar(template, templateItem));
         }
-        
+
         if(options.renderExtra && typeof options.renderExtra === "function") {
           options.renderExtra(template, templateItem, versaoDiv);
         }
@@ -318,19 +425,19 @@ function carregarTemplatesImport() {
           const dotsIcon = document.createElement('span');
           dotsIcon.classList.add('material-symbols-outlined');
           dotsIcon.textContent = 'keyboard_arrow_up';
-  
+
           versaoDiv.appendChild(dotsIcon);
-          
+
           const dropdown = document.createElement('div');
           dropdown.id = 'dropdownid';
           dropdown.classList.add('drop-down');
-          
+
           const dropdownContent = document.createElement('div');
           dropdownContent.classList.add('drop-down-content');
-          
+
           dropdown.appendChild(dropdownContent);
           versaoDiv.appendChild(dropdown);
-          
+
           dotsIcon.addEventListener("click", (e) => {
             e.stopPropagation();
             dotsIcon.classList.toggle("rotate");
@@ -339,7 +446,7 @@ function carregarTemplatesImport() {
               displayVersions(versoes, dropdownContent, template.id);
             }
           });
-        }  
+        }
       });
     }
   });
@@ -357,14 +464,14 @@ let selectedTemplate = null;
 let codigoSave = null;
 
 function carregarTemplatesSave(codigo) {
-  fetch("http://localhost/EditorJsV.2/EditorJs/editor_php/carregar.php", { method: "GET" })
+  fetch("http://localhost/EditorJs/editor_php/carregar.php", { method: "GET" })
     .then(response => response.json())
     .then(data => {
       if (data.length === 0) {
         salvarData(codigo, "", false);
         return;
       }
-      
+
       carregarTemplatesGeneric({
         containerId: "templateSelectList",
         onSelecionar: (template, element) => {
@@ -418,7 +525,7 @@ function esperarFecharPopup() {
 }
 
 function viewVersion(id) {
-  return fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/versions.php?id=${id}`, { method: "GET" })
+  return fetch(`http://localhost/EditorJs/editor_php/versions.php?id=${id}`, { method: "GET" })
     .then(response => response.json())
     .then(data => {
       if (data.erro) {
@@ -451,7 +558,7 @@ function displayVersions(versoes, content, id) {
     button.appendChild(icon);
     icon.addEventListener('click', function() {
       if (confirm('Tem certeza que deseja excluir esta versão?')) {
-        fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/deletar.php?ID=${id}&versao=${versao}`, { method: 'GET' })
+        fetch(`http://localhost/EditorJs/editor_php/deletar.php?ID=${id}&versao=${versao}`, { method: 'GET' })
         .then(data => {
           viewVersion(id)
             .then(novasVersoes => {
@@ -473,7 +580,7 @@ function displayVersions(versoes, content, id) {
 }
 
 function aplicarVersao(versao, id) {
-  fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/carregar.php?versao=${versao}&id=${id}`)
+  fetch(`http://localhost/EditorJs/editor_php/carregar.php?versao=${versao}&id=${id}`)
     .then(response => response.json())
     .then(data => {
       console.log(data);
@@ -492,7 +599,7 @@ function aplicarTemplate(codigo, nome_arquivo, id) {
 
 function deletarTemplate(id) {
   if (confirm('Tem certeza que deseja excluir este template?')) {
-    fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/deletar.php?ID=${id}`, { method: 'GET' })
+    fetch(`http://localhost/EditorJs/editor_php/deletar.php?ID=${id}`, { method: 'GET' })
     .then(response => response.json())
     .then(data => {
       console.log('Template deletado:', data);
@@ -525,6 +632,13 @@ document.addEventListener("keydown", (event) => {
         if (imageUrl) {
           deleteImages(imageUrl);
         }
+      } else if (block.name === 'Carousel') {
+        block.save().then((carouselData) => {
+          for (let i = 0; i < carouselData.data.images.length; i++) {
+            const imageUrl = carouselData.data.images;
+            deleteImages(imageUrl[i]);
+          }
+        });
       }
       editor.blocks.delete(currentBlockIndex);
     }
@@ -560,26 +674,26 @@ btnEdit.addEventListener('click', function() {
 function changeview(clickedbtn) {
   const pag = document.getElementById('pag');
   const jsonView = document.getElementById('jsonview');
-  
+
   if (clickedbtn === btnView) {
     btnEdit.classList.remove('selected');
     btnView.classList.add('selected');
-    
+
     editor.save().then((outputData) => {
       display(outputData);
     }).catch((error) => {
       console.log(error);
     });
-    
+
     jsonView.style.zIndex = 2;
     pag.style.zIndex = 1;
   } else if (clickedbtn === btnEdit) {
     btnView.classList.remove('selected');
     btnEdit.classList.add('selected');
-    
+
     var text = document.getElementById('jsonDisplay');
     text.content = null;
-    
+
     pag.style.zIndex = 2;
     jsonView.style.zIndex = 1;
   }
@@ -590,7 +704,7 @@ function display(jsoncode) {
   text.textContent = JSON.stringify(jsoncode, null, 2);
 }
 
-function deleteImages(imageUrl) {
+export function deleteImages(imageUrl) {
   editor.save().then(data => {
     const imageUrlCont = decodeURIComponent(imageUrl);
     const blocks = data.blocks;
@@ -604,7 +718,7 @@ function deleteImages(imageUrl) {
       return;
     }
     if (!globalId) {
-      fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/delete_image.php`, {
+      fetch(`http://localhost/EditorJs/editor_php/delete_image.php`, {
       method: "POST",
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageUrl })
@@ -613,11 +727,11 @@ function deleteImages(imageUrl) {
     .then(data => console.log('Imagem deletada:', data))
     .catch(error => console.error('Erro ao deletar a imagem:', error));
     } else {
-      fetch(`http://localhost/EditorJsV.2/EditorJs/editor_php/delete_image.php`, {
+      fetch(`http://localhost/EditorJs/editor_php/delete_image.php`, {
       method: "POST",
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageUrl,
-                              globalId
+      globalId
        })
     })
     .then(response => response.json())

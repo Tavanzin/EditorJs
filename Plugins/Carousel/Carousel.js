@@ -1,18 +1,20 @@
-export default class CarouselTool {
+export default class CarouselTool {  
   static get toolbox() {
+
     return {
       title: 'Carousel',
-      icon: '<svg width="20" height="20" viewBox="0 0 20 20"></svg>',
+      icon: '<span width="20" height="20" viewBox="0 0 20 20" class="material-symbols-outlined">view_carousel</span>',
     };
   }
-
-  constructor({ data }) {
+  
+  constructor({ data, config }) {
     this.data = data || { images: [] };
+    this.config = config;
     this.wrapper = undefined;
-    this.transitionTime = 3000;
+    this.transitionTime = 5000;
     this.carouselHeight = 600;
   }
-
+  
   render() {
     this.wrapper = document.createElement('div');
     this.carousel = document.createElement('div');
@@ -28,7 +30,6 @@ export default class CarouselTool {
         this.track.appendChild(slide);
       });
     } else {
-      // MODIFICAÇÃO: Se não houver imagens, solicita a adição imediata de uma imagem
       this.handleImageSelection();
     }
     trackContainer.appendChild(this.track);
@@ -37,7 +38,7 @@ export default class CarouselTool {
     this.startCarousel();
     return this.wrapper;
   }
-
+  
   renderSettings() {
     const wrapper = document.createElement('div');
     wrapper.style.display = "flex";
@@ -46,7 +47,8 @@ export default class CarouselTool {
     const timeButton = document.createElement('button');
     timeButton.classList.add('inline-btn');
     const timeIcon = document.createElement('span');
-    timeIcon.textContent = '⏱';
+    timeIcon.classList.add('material-symbols-outlined');
+    timeIcon.textContent = 'timer';
     timeButton.appendChild(timeIcon);
     const timeText = document.createElement('span');
     timeText.textContent = ' Tempo';
@@ -64,7 +66,8 @@ export default class CarouselTool {
     const sizeButton = document.createElement('button');
     sizeButton.classList.add('inline-btn');
     const sizeIcon = document.createElement('span');
-    sizeIcon.textContent = '📏';
+    sizeIcon.classList.add('material-symbols-outlined');
+    sizeIcon.textContent = 'Straighten';
     sizeButton.appendChild(sizeIcon);
     const sizeText = document.createElement('span');
     sizeText.textContent = ' Tamanho';
@@ -82,7 +85,8 @@ export default class CarouselTool {
     const addImageButton = document.createElement('button');
     addImageButton.classList.add('inline-btn');
     const addIcon = document.createElement('span');
-    addIcon.textContent = '➕';
+    addIcon.classList.add('material-symbols-outlined');
+    addIcon.textContent = 'Add';
     addImageButton.appendChild(addIcon);
     const addText = document.createElement('span');
     addText.textContent = ' Adicionar Imagem';
@@ -95,7 +99,8 @@ export default class CarouselTool {
     const changeImageButton = document.createElement('button');
     changeImageButton.classList.add('inline-btn');
     const changeIcon = document.createElement('span');
-    changeIcon.textContent = '🔄';
+    changeIcon.classList.add('material-symbols-outlined');
+    changeIcon.textContent = 'Change_circle';
     changeImageButton.appendChild(changeIcon);
     const changeText = document.createElement('span');
     changeText.textContent = ' Alterar Imagem';
@@ -103,7 +108,7 @@ export default class CarouselTool {
     changeImageButton.addEventListener('click', () => {
       const slides = this.track.querySelectorAll('.carousel_slide');
       if (slides.length > 0) {
-        this.handleImageSelection(slides[0]); // altera a primeira imagem
+        this.handleImageSelection(slides[0]);
       } else {
         this.handleImageSelection();
       }
@@ -113,12 +118,23 @@ export default class CarouselTool {
     const removeImageButton = document.createElement('button');
     removeImageButton.classList.add('inline-btn');
     const removeIcon = document.createElement('span');
-    removeIcon.textContent = '➖';
+    removeIcon.classList.add('material-symbols-outlined');
+    removeIcon.textContent = 'remove';
     removeImageButton.appendChild(removeIcon);
     const removeText = document.createElement('span');
     removeText.textContent = ' Remover Imagem';
     removeImageButton.appendChild(removeText);
     removeImageButton.addEventListener('click', () => {
+      const slides = this.track.querySelectorAll('.carousel_slide');
+      if (slides.length > 0) {
+        const lastSlide = slides[slides.length - 1];
+        const imageUrl = lastSlide.querySelector('.carousel_image').src;
+        
+        if(this.config && typeof this.config.deleteImages === 'function') {
+          this.config.deleteImages(imageUrl);
+        }
+      }
+        
       this.handleRemoveSlide();
     });
     wrapper.appendChild(removeImageButton);
@@ -145,10 +161,18 @@ export default class CarouselTool {
     modal.appendChild(divInput);
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
-    submitButton.addEventListener('click', () => {
+
+    const submit = () => {
       const value = input.value;
       callback(value);
       document.body.removeChild(overlay);
+    };
+  
+    submitButton.addEventListener('click', submit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        submit();
+      }
     });
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) {
@@ -165,7 +189,6 @@ export default class CarouselTool {
     img.src = src;
     img.alt = 'imagem';
     li.appendChild(img);
-    // REMOVIDO: O clique na imagem não adiciona ou altera a imagem
     return li;
   }
 
@@ -203,7 +226,6 @@ export default class CarouselTool {
       this.track.removeChild(lastSlide);
       this.updateSlidesPosition();
       this.restartCarousel();
-      // MODIFICAÇÃO: Se não houver mais imagens, remove a ferramenta do template
       if (this.track.children.length === 0 && this.wrapper.parentNode) {
         this.wrapper.parentNode.removeChild(this.wrapper);
       }
@@ -214,7 +236,7 @@ export default class CarouselTool {
     const formData = new FormData();
     formData.append('image', file);
     try {
-      const response = await fetch('http://localhost/EditorJsV.2/EditorJs/editor_php/upload_image.php', {
+      const response = await fetch('http://localhost/EditorJs/editor_php/upload_image.php', {
         method: 'POST',
         body: formData,
       });

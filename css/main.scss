@@ -374,26 +374,39 @@ body {
 }
 
 .ce-editorjsColumns_col{
-  border: 0.1px solid rgba(0, 0, 0, 0.15);
+  outline: 2px solid rgba(0, 0, 0, 0.15);
+  outline-offset: 2.5px;
   transition: 0.3s;
 
   &:hover {
-    border: 0.5px solid rgb(0, 140, 210);
+    outline: 2px solid rgb(0, 140, 210);
   }
 }
 
 .ce-block__content {
-  border: 0.5px solid transparent;
+  outline: 2px solid transparent;
+  outline-offset: 2.5px;
   transition: 0.3s;
 
   &:hover {
-    border: 0.5px solid rgb(0, 140, 210);
+    outline: 2px solid rgb(0, 140, 210);
   }
 
   &:has(.ce-editorjsColumns_wrapper) {
     border: none !important;
     &:hover {
       border: none !important;
+    }
+  }
+}
+
+.ce-popover-item{
+  &:hover {
+    background-color: #eee !important;
+
+    &[data-item-name="delete"]:hover {
+      background-color: #CE4343 !important;
+      color: white;
     }
   }
 }
