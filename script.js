@@ -105,6 +105,8 @@ class Spacer {
   }
 }
 
+let globalId = null;
+
 const editor = new EditorJs({
   holder: 'editorjs',
   defaultBlock: 'paragraph',
@@ -195,7 +197,7 @@ const editor = new EditorJs({
             class: ImageTool,
             config: {
               endpoints: {
-                byFile: "http://localhost/EditorJs/editor_php/upload_image.php"
+                byFile: `http://localhost/EditorJs/editor_php/upload_image.php`
               },
               field: "image",
               types: "image/*",
@@ -205,17 +207,15 @@ const editor = new EditorJs({
                   const formData = new FormData();
                   formData.append("image", file);
 
-                  return fetch("http://localhost/EditorJs/editor_php/upload_image.php", {
+                  return fetch(`http://localhost/EditorJs/editor_php/upload_image.php`, {
                     method: "POST",
                     body: formData
                   })
                   .then(response => response.json())
                   .then(result => {
-                    console.log("Resposta do servidor:", result);
                     return result;
                   })
                   .catch(error => {
-                    console.error("Erro no upload:", error);
                   });
                 }
               }
@@ -244,7 +244,7 @@ const editor = new EditorJs({
       class: ImageTool,
       config: {
         endpoints: {
-          byFile: "http://localhost/EditorJs/editor_php/upload_image.php"
+          byFile: `http://localhost/EditorJs/editor_php/upload_image.php`
         },
         field: "image",
         types: "image/*",
@@ -254,17 +254,15 @@ const editor = new EditorJs({
             const formData = new FormData();
             formData.append("image", file);
 
-            return fetch("http://localhost/EditorJs/editor_php/upload_image.php", {
+            return fetch(`http://localhost/EditorJs/editor_php/upload_image.php`, {
               method: "POST",
               body: formData
             })
             .then(response => response.json())
             .then(result => {
-              console.log("Resposta do servidor:", result);
               return result;
             })
             .catch(error => {
-              console.error("Erro no upload:", error);
             });
           }
         }
@@ -284,7 +282,6 @@ const editor = new EditorJs({
 });
 
 let nome_arquivo_atual = "";
-let globalId = null;
 let newProjectBtn = document.getElementById('new-project');
 
 newProjectBtn.addEventListener('click', async function() {
@@ -334,7 +331,6 @@ function salvarData(codigo, nome, reabrirSelect = true) {
     let jsonData = JSON.parse(data);
     if (jsonData.template_id) {
       globalId = jsonData.template_id;
-      console.log("id: ", globalId);
     }
     if (reabrirSelect) {
       carregarTemplatesSave();
@@ -344,15 +340,14 @@ function salvarData(codigo, nome, reabrirSelect = true) {
   return;
 }
 
-document.getElementById('import').addEventListener('click', function() {
-  console.log(currentPath);
-  document.getElementById('template').style.display = 'flex';
-  carregarTemplatesImport();
-});
-
 document.getElementById('close').addEventListener('click', function() {
   document.getElementById('template').style.display = 'none';
   const menu = document.getElementsByClassName('drop-down-content')[0];
+});
+
+document.getElementById('import').addEventListener('click', function() {
+  document.getElementById('template').style.display = 'flex';
+  carregarTemplatesImport();
 });
 
 function carregarTemplatesGeneric(options) {
@@ -361,6 +356,23 @@ function carregarTemplatesGeneric(options) {
     .then(data => {
       const container = document.getElementById(options.containerId);
       container.innerHTML = "";
+
+      if (data.length === 0) {
+        container.innerHTML = "<strong style='font-size: 20px;'>Nenhum template salvo</strong>";
+        const modal = document.getElementsByClassName("modal-content")[0];
+        if (modal) {
+          modal.style.setProperty('min-height', '150px');
+          document.getElementById('templateList').classList.add('emptyTemplateList');
+        }
+        return;
+      } else {
+        const modal = document.getElementsByClassName("modal-content")[0];
+        if (modal) {
+          modal.style.setProperty('min-height', '');
+          document.getElementById('templateList').classList.remove('emptyTemplateList');
+          document.getElementById('templateList').style.alignItems = '';
+        }
+      }
 
       data.forEach(template => {
         const templateItem = document.createElement("div");
@@ -418,9 +430,8 @@ function carregarTemplatesImport() {
     containerId: "templateList",
     onAplicar: template => aplicarTemplate(template.codigo, template.nome_arquivo, template.id),
     onDeletar: template => deletarTemplate(template.id),
-    renderExtra: (template, templateItem, versaoDiv) => {
-      viewVersion(template.id)
-      .then(versoes => {
+    renderExtra: (template, templateItem,versaoDiv) => {
+      viewVersion(template.id).then(versoes => {
         if (versoes && versoes.length > 0) {
           const dotsIcon = document.createElement('span');
           dotsIcon.classList.add('material-symbols-outlined');
@@ -443,7 +454,7 @@ function carregarTemplatesImport() {
             dotsIcon.classList.toggle("rotate");
             dropdownContent.classList.toggle("view-menu");
             if (dropdownContent.classList.contains("view-menu")) {
-              displayVersions(versoes, dropdownContent, template.id);
+                displayVersions(dropdownContent, template.id, dotsIcon, dropdown);
             }
           });
         }
@@ -541,49 +552,75 @@ function viewVersion(id) {
     });
 }
 
-function displayVersions(versoes, content, id) {
+function displayVersions(content, id, dotsIcon, dropdown) {
+  disableObserver = true;
   content.innerHTML = "";
-  versoes.forEach(versao => {
-    const button = document.createElement('button');
-    const span = document.createElement('span');
-    if (versao === 1) {
-      span.textContent = `Versão: ${versao}.0`;
-    } else {
-      span.textContent = `Versão: ${versao}`;
-    }
-    button.appendChild(span);
-    const icon = document.createElement('i');
-    icon.classList.add('material-symbols-outlined');
-    icon.textContent = 'delete';
-    button.appendChild(icon);
-    icon.addEventListener('click', function() {
-      if (confirm('Tem certeza que deseja excluir esta versão?')) {
-        fetch(`http://localhost/EditorJs/editor_php/deletar.php?ID=${id}&versao=${versao}`, { method: 'GET' })
-        .then(data => {
-          viewVersion(id)
-            .then(novasVersoes => {
-              displayVersions(novasVersoes, content, id);
-            })
-            .catch(error => console.error('Erro ao atualizar as versões:', error));
-        });
-      }
+  viewVersion(id).then(versoes => {
+    versoes.forEach(versao => {
+      const button = document.createElement('button');
+      const span = document.createElement('span');
+      span.textContent = versao === 1 ? `Versão: ${versao}.0` : `Versão: ${versao}`;
+      button.appendChild(span);
+      const icon = document.createElement('i');
+      icon.classList.add('material-symbols-outlined');
+      icon.textContent = 'delete';
+      button.appendChild(icon);
+
+      icon.addEventListener('click', async function() {
+        if (confirm('Tem certeza que deseja excluir esta versão?')) {
+          const response = await fetch(`http://localhost/EditorJs/editor_php/deletar.php?id=${id}&versao=${versao}`, { method: 'GET' });
+          const text = await response.text();
+          let versionData = text ? JSON.parse(text) : {};
+
+          let images = [];
+          if (versionData && versionData.codigo) {
+            const parsed = JSON.parse(versionData.codigo);
+            parsed.blocks.forEach(block => {
+              if (block.type === "image" && block.data.file.url) {
+                images.push(block.data.file.url);
+              }
+            });
+          }
+          for (const imgUrl of images) {
+            const used = await isImageUsed(imgUrl, id, true);
+            if (!used) {
+              deleteImages(imgUrl, id);
+            }
+          }
+
+          const versoesRestantes = await viewVersion(id);
+
+          if (versoesRestantes.length > 0) {
+            displayVersions(content, id, dotsIcon, dropdown);
+          } else {
+            if (dropdown) {
+              dropdown.remove();
+            }
+            if (dotsIcon) {  
+              dotsIcon.remove();
+            }
+          }
+        }
+      });
+
+      button.addEventListener('click', (e) => {
+        if (e.target.closest('i')) return;
+        aplicarVersao(versao, id);
+        document.getElementById('template').style.display = 'none';
+        const menu = document.getElementsByClassName('drop-down-content')[0];
+        menu.classList.remove('view-menu');
+      });
+
+      content.appendChild(button);
     });
-    button.addEventListener('click', (e) => {
-      if (e.target.closest('i')) return;
-      aplicarVersao(versao, id);
-      document.getElementById('template').style.display = 'none';
-      const menu = document.getElementsByClassName('drop-down-content')[0];
-      menu.classList.remove('view-menu');
-    });
-    content.appendChild(button);
-  });
+});
 }
 
 function aplicarVersao(versao, id) {
+  disableObserver = true;
   fetch(`http://localhost/EditorJs/editor_php/carregar.php?versao=${versao}&id=${id}`)
     .then(response => response.json())
     .then(data => {
-      console.log(data);
       editor.render(data[0].codigo);
       globalId = id;
     })
@@ -591,6 +628,7 @@ function aplicarVersao(versao, id) {
 }
 
 function aplicarTemplate(codigo, nome_arquivo, id) {
+  disableObserver = true;
   editor.render(codigo);
   globalId = id;
   nome_arquivo_atual = nome_arquivo;
@@ -599,10 +637,10 @@ function aplicarTemplate(codigo, nome_arquivo, id) {
 
 function deletarTemplate(id) {
   if (confirm('Tem certeza que deseja excluir este template?')) {
-    fetch(`http://localhost/EditorJs/editor_php/deletar.php?ID=${id}`, { method: 'GET' })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Template deletado:', data);
+    fetch(`http://localhost/EditorJs/editor_php/deletar.php?id=${id}`, { method: 'GET' })
+    .then(response => response.text())
+    .then(text => {
+      let data = text ? JSON.parse(text) : {};
       if (data.reset) {
         document.getElementById('template').style.display = 'none';
       }
@@ -613,37 +651,14 @@ function deletarTemplate(id) {
       }
     })
     .catch(error => { console.error('Erro ao deletar o template:', error); });
-  }
+}
 }
 
 function clearTemplate() {
   editor.render({ blocks: [] });
+  globalId = null;
+  nome_arquivo_atual = "";
 }
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Delete") {
-    const currentBlockIndex = editor.blocks.getCurrentBlockIndex();
-    const block = editor.blocks.getBlockByIndex(currentBlockIndex);
-
-    if (currentBlockIndex !== -1) {
-      if (block.name === 'image') {
-        const imgElement = block.holder.querySelector('img');
-        const imageUrl = imgElement ? imgElement.src : null;
-        if (imageUrl) {
-          deleteImages(imageUrl);
-        }
-      } else if (block.name === 'Carousel') {
-        block.save().then((carouselData) => {
-          for (let i = 0; i < carouselData.data.images.length; i++) {
-            const imageUrl = carouselData.data.images;
-            deleteImages(imageUrl[i]);
-          }
-        });
-      }
-      editor.blocks.delete(currentBlockIndex);
-    }
-  }
-});
 
 document.addEventListener('click', (event) => {
   const dropdowns = document.getElementsByClassName('drop-down-content');
@@ -704,39 +719,105 @@ function display(jsoncode) {
   text.textContent = JSON.stringify(jsoncode, null, 2);
 }
 
-export function deleteImages(imageUrl) {
-  editor.save().then(data => {
-    const imageUrlCont = decodeURIComponent(imageUrl);
-    const blocks = data.blocks;
-    const blocksWithSameUrl = blocks.filter(block => {
-      if (block.type === 'image') {
-        return block.data.file.url === imageUrlCont;
+async function isImageUsed(imageUrl, id = globalId, checkId = false) {
+  disableObserver = true;
+  try{
+    const decodeImageUrl = decodeURIComponent(imageUrl);  
+    const currentData = await editor.save();
+    if(currentData.blocks.some(block => block.type === "image" && block.data.file.url === decodeImageUrl)){
+      return true;
+    }
+    if (checkId) {
+      console.log(id);
+      const responseMain = await fetch(`http://localhost/EditorJs/editor_php/carregar.php?id=${id}`, { method: "GET" });
+      const mainData = await responseMain.json();
+      console.log("checkId data: ", mainData);
+      for (const item of mainData) {
+          let templateData = item.codigo;
+          if (templateData.blocks.some(block => block.type === "image" && block.data.file.url === decodeImageUrl)) {
+            return true;
+          }
+        }
+    }
+    if (id) {
+      const versions = await viewVersion(id);
+      for (const version of versions) {
+        console.log("versao: ", version);
+        const response = await fetch(`http://localhost/EditorJs/editor_php/carregar.php?versao=${version}&id=${id}`, { method: "GET" });
+        const versionData = await response.json();
+        console.log(version , ": " , versionData);
+        if(versionData.length > 0){
+          for (let i = 0; i < versionData.length; i++) {
+            let templateData = versionData[i].codigo;
+            for (let i = 0; i < templateData.blocks.length; i++) {
+              console.log("template: ", templateData.blocks[i].data.file.url);
+              console.log("image: ", templateData.blocks[i].type);
+              if (templateData.blocks[i].type === "image" && templateData.blocks[i].data.file.url === decodeImageUrl) {
+                console.log("teste true");
+                return true;
+              }
+            }
+          }
+        }
       }
-      return false;
-    });
-    if (blocksWithSameUrl.length > 1) {
-      return;
     }
-    if (!globalId) {
-      fetch(`http://localhost/EditorJs/editor_php/delete_image.php`, {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageUrl })
-    })
-    .then(response => response.json())
-    .then(data => console.log('Imagem deletada:', data))
-    .catch(error => console.error('Erro ao deletar a imagem:', error));
-    } else {
-      fetch(`http://localhost/EditorJs/editor_php/delete_image.php`, {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageUrl,
-      globalId
-       })
-    })
-    .then(response => response.json())
-    .then(data => console.log('Imagem deletada:', data))
-    .catch(error => console.error('Erro ao deletar a imagem:', error));
-    }
-  }).catch(error => console.error("Erro ao salvar os dados do editor:", error));
+  } catch (error) {
+    console.error("Erro ao verificar imagem", error);
+  }
+  return false;
 }
+
+export async function deleteImages(imageUrl, id = globalId) {
+  console.log(id);
+    fetch(`http://localhost/EditorJs/editor_php/delete_image.php`, {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl, id })
+    })
+}
+
+/* DELETE */
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Delete") {
+    const currentBlockIndex = editor.blocks.getCurrentBlockIndex();
+    const block = editor.blocks.getBlockByIndex(currentBlockIndex);
+      editor.blocks.delete(currentBlockIndex);
+    }
+});
+
+let disableObserver = false;
+
+const observer = new MutationObserver((mutationsList) => {
+  if (disableObserver) { disableObserver = false; return; }
+  mutationsList.forEach((mutation) => {
+    mutation.removedNodes.forEach((removedNode) => {
+      if (removedNode.nodeType === Node.ELEMENT_NODE && removedNode.classList) {
+        
+        if (removedNode.classList.contains('ce-block')) {
+
+          const imgElement = removedNode.querySelector('.image-tool__image-picture');
+          if (imgElement && imgElement.src) {
+            const used = isImageUsed(imgElement.src);
+            if (!used) {
+              deleteImages(imgElement.src);
+            }
+          } else if (removedNode.querySelector('.carousel')) {
+            const imageElements = removedNode.querySelectorAll('img');
+            imageElements.forEach((img) => {
+              if (img.src) {
+                const used = isImageUsed(img.src);
+                if (!used) {
+                  deleteImages(img.src);
+                }
+              }
+            });
+          }
+        }
+      }
+    });
+  });
+});
+
+const editorContainer = document.getElementById('editorjs');
+observer.observe(editorContainer, { childList: true, subtree: true });

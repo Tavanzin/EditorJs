@@ -34,15 +34,32 @@ if ($conn->connect_error) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    if (isset($_GET['ID']) && isset($_GET['versao'])){
-      $id = $_GET['ID'];
-      $versao = $_GET['versao'];
+  if (isset($_GET['id']) && isset($_GET['versao'])) { 
+    $id = $_GET['id'];
+    $_GET['versao'] === 1 ? $versao = 1.0 : $versao = $_GET['versao'];
 
-      $stmt = $conn->prepare("DELETE FROM versao_templates WHERE template_id = ? AND ROUND(versao, 1) = ROUND(?, 1)");
-      $stmt->bind_param("id", $id, $versao);
-      $stmt->execute();
-    } elseif (isset($_GET['ID'])) {
-    $id = $_GET['ID'];
+    $stmtSelect = $conn->prepare("SELECT codigo FROM versao_templates WHERE template_id = ? AND versao = ?");
+    $stmtSelect->bind_param("id", $id, $versao);
+    $stmtSelect->execute();
+    $result = $stmtSelect->get_result();
+
+    if ($result->num_rows > 0) {
+      $row = $result->fetch_assoc();
+
+      $stmtDelete = $conn->prepare("DELETE FROM versao_templates WHERE template_id = ? AND ROUND(versao, 1) = ROUND(?, 1)");
+      $stmtDelete->bind_param("id", $id, $versao);
+      if($stmtDelete->execute()){
+        echo json_encode(["success" => true, "codigo" => $row["codigo"]]);
+      } else {
+        echo json_encode(["success" => false, "message" => "Error ao deletar versão"]);
+      }
+      $stmtDelete->close();
+    } else {
+      echo json_encode(["success" => false, "message" => "versão não encontrada"]);
+    }
+    $stmtSelect->close();
+  } else if (isset($_GET['id'])) {
+    $id = $_GET['id'];
 
     $stmtArquivo = $conn->prepare("SELECT nome_arquivo FROM templates WHERE id = ?");
     $stmtArquivo->bind_param("s", $id);

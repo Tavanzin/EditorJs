@@ -16,6 +16,7 @@ export default class CarouselTool {
   }
   
   render() {
+    
     this.wrapper = document.createElement('div');
     this.carousel = document.createElement('div');
     this.carousel.className = 'carousel';
@@ -36,6 +37,8 @@ export default class CarouselTool {
     this.carousel.appendChild(trackContainer);
     this.wrapper.appendChild(this.carousel);
     this.startCarousel();
+    this.wrapper.setAttribute('data-block-type', 'Carousel');
+    
     return this.wrapper;
   }
   

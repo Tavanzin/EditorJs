@@ -11,23 +11,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
     $imageUrl = $input['imageUrl'];
-
     $filename = parse_url($imageUrl, PHP_URL_PATH);
     $filename = basename($filename);
     $filename = urldecode($filename);
-
-    if (isset($input['globalId'])){
-        $id = $input['globalId'];
-        $filepath = 'uploads/'. $id . '/' . $filename;
+    $id = isset($input['id']) && !empty($input['id']) ? filter_var($input['id']) : null;
+    if ($id) {
+        $filepath = 'uploads/' . $id . '/' . $filename;
     } else {
         $filepath = 'uploads/temp/' . $filename;
     }
-
     if (!file_exists($filepath)) {
         echo json_encode(["success" => 0, "message" => "Arquivo não encontrado."]);
         exit;
     }
-
     if (unlink($filepath)) {
         echo json_encode(["success" => 1, "message" => "Imagem deletada."]);
     } else {

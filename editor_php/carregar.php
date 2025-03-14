@@ -16,22 +16,29 @@ if ($conn->connect_error) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    if (isset($_GET['versao'])) {
-    $versao = floatval($_GET['versao']);
-    $id = $_GET['id'];
-    $stmt = $conn->prepare("SELECT codigo, nome_arquivo FROM versao_templates WHERE versao = ? AND template_id = ?");
-    $stmt->bind_param("di", $versao, $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    if (isset($_GET['id'])) {
+      $id = $_GET['id'];
 
-    $template = [];
-    
-    if ($row = $result->fetch_assoc()) {
-      $template[] = [
-        "codigo" => json_decode($row["codigo"]),
-        "nome_arquivo" => $row["nome_arquivo"]
-      ];
-    }
+      if (isset($_GET['versao']) && floatval($_GET['versao']) > 0) {
+        $versao = floatval($_GET['versao']);
+        $stmt = $conn->prepare("SELECT codigo, nome_arquivo FROM versao_templates WHERE versao = ? AND template_id = ?");
+        $stmt->bind_param("di", $versao, $id);
+      } else {
+        $stmt = $conn->prepare("SELECT codigo, nome_arquivo FROM templates WHERE id = ?");
+        $stmt->bind_param("i", $id);
+      }
+      
+      $stmt->execute();
+      $result = $stmt->get_result();
+      
+      $template = [];
+      if ($row = $result->fetch_assoc()){
+          $template[] = [
+             "codigo" => json_decode($row["codigo"]),
+             "nome_arquivo" => isset($row["nome_arquivo"]) ? $row["nome_arquivo"] : null
+          ];
+      }      
+
     echo json_encode($template);
     $stmt->close();
   } else {

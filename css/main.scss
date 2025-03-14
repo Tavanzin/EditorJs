@@ -301,12 +301,17 @@ body {
   }
 }
 
+.emptyTemplateList {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 #templateList, #templateSelectList{
   border-top: 1px solid;
   width: calc(100% + 20px);
   margin: 0 -10px;
   flex-grow: 1;
-
 }
 #templateSelectList .template-item{
   cursor: pointer;
