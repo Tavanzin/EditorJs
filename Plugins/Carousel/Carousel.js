@@ -284,8 +284,9 @@ export default class CarouselTool {
 
   save(blockContent) {
     const images = Array.from(blockContent.querySelectorAll('.carousel_image')).map(img => img.src);
+    const decodeImages = decodeURIComponent(images);
     return {
-      images,
+      decodeImages,
       transitionTime: this.transitionTime,
       carouselHeight: this.carouselHeight,
     };

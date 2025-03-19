@@ -312,6 +312,7 @@ function salvarData(codigo, nome, reabrirSelect = true) {
   let nomeArquivo;
   if (!nome) {
     nomeArquivo = prompt("Digite o nome do template:");
+    if (nomeArquivo === null) return;
     nome_arquivo_atual = nomeArquivo;
     if (!nomeArquivo) {
       alert("Nome do template não pode ser vazio");
@@ -331,12 +332,21 @@ function salvarData(codigo, nome, reabrirSelect = true) {
     let jsonData = JSON.parse(data);
     if (jsonData.template_id) {
       globalId = jsonData.template_id;
+      if (jsonData.codigo) {
+        const updatedCode = JSON.parse(jsonData.codigo);
+        display(updatedCode);
+        editor.render(updatedCode);
+      } else {
+        display(codigo);
+        editor.render(codigo);
+      }
     }
     if (reabrirSelect) {
       carregarTemplatesSave();
     }
   })
   .catch(error => { console.error("Erro ao enviar:", error); });
+
   return;
 }
 
@@ -388,7 +398,7 @@ function carregarTemplatesGeneric(options) {
         templateItem.appendChild(templateContent);
         templateItem.appendChild(versaoDiv);
 
-        const btns = document.createElement("div");
+        const btns = document.createElement("div"); 
         btns.classList.add("btnImport");
 
         if(options.onAplicar) {
@@ -430,12 +440,13 @@ function carregarTemplatesImport() {
     containerId: "templateList",
     onAplicar: template => aplicarTemplate(template.codigo, template.nome_arquivo, template.id),
     onDeletar: template => deletarTemplate(template.id),
-    renderExtra: (template, templateItem,versaoDiv) => {
+    renderExtra: (template, templateItem, versaoDiv) => {
       viewVersion(template.id).then(versoes => {
         if (versoes && versoes.length > 0) {
           const dotsIcon = document.createElement('span');
           dotsIcon.classList.add('material-symbols-outlined');
           dotsIcon.textContent = 'keyboard_arrow_up';
+          dotsIcon.id = 'dropdownId';
 
           versaoDiv.appendChild(dotsIcon);
 
@@ -462,6 +473,18 @@ function carregarTemplatesImport() {
     }
   });
 }
+
+document.addEventListener("click", function(event) {
+  const popup = document.getElementById("template");
+
+  if (
+    popup.style.display === "flex" && 
+    !event.target.closest(".modal-content") &&
+    !event.target.closest("#import")
+  ) {
+    popup.style.display = "none";
+  }
+});
 
 document.getElementById('save').addEventListener('click', function() {
   editor.save().then((outputData) => {
@@ -502,6 +525,18 @@ function carregarTemplatesSave(codigo) {
   document.getElementById('templateSelect').style.display = "flex";
   });
 }
+
+document.addEventListener("click", function(event) {
+  const popup = document.getElementById("templateSelect");
+
+  if (
+    popup.style.display === "flex" && 
+    !event.target.closest(".modal-content ") &&
+    !event.target.closest("#save")
+  ) {
+    popup.style.display = "none";
+  }
+});
 
 document.getElementById('newSave').addEventListener("click", function() {
   editor.save().then((data) => {
@@ -574,13 +609,45 @@ function displayVersions(content, id, dotsIcon, dropdown) {
 
           let images = [];
           if (versionData && versionData.codigo) {
-            const parsed = JSON.parse(versionData.codigo);
-            parsed.blocks.forEach(block => {
-              if (block.type === "image" && block.data.file.url) {
-                images.push(block.data.file.url);
-              }
-            });
+            const templateData = typeof versionData.codigo === 'string'
+              ? JSON.parse(versionData.codigo)
+              : versionData.codigo;
+              
+            if (templateData.blocks && Array.isArray(templateData.blocks)) {
+              templateData.blocks.forEach(block => {
+                if (block.type === "image" && block.data && block.data.file && block.data.file.url) {
+                  console.log("Image URL:", block.data.file.url);
+                  images.push(block.data.file.url);
+                }
+                
+                if (block.type === "Carousel" && block.data && block.data.decodeImages) {
+                  if (typeof block.data.decodeImages === 'string') {
+                    if (block.data.decodeImages.includes(',')) {
+                      const urls = block.data.decodeImages.split(',').map(url => url.trim());
+                      urls.forEach(url => {
+                        if (url) {
+                          console.log("Carousel URL:", url);
+                          images.push(url);
+                        }
+                      });
+                    } else {
+                      console.log("Carousel URL:", block.data.decodeImages.trim());
+                      images.push(block.data.decodeImages.trim());
+                    }
+                  }
+                  else if (Array.isArray(block.data.decodeImages)) {
+                    block.data.decodeImages.forEach(url => {
+                      if (url) {
+                        console.log("Carousel URL:", url);
+                        images.push(url);
+                      }
+                    });
+                  }
+                }
+              });
+            }
           }
+
           for (const imgUrl of images) {
             const used = await isImageUsed(imgUrl, id, true);
             if (!used) {
@@ -623,6 +690,9 @@ function aplicarVersao(versao, id) {
     .then(data => {
       editor.render(data[0].codigo);
       globalId = id;
+      if (btnView.classList.contains('selected')) {
+        display(codigo);
+      }
     })
     .catch(error => console.error("Erro ao carregar template:", error));
 }
@@ -633,6 +703,9 @@ function aplicarTemplate(codigo, nome_arquivo, id) {
   globalId = id;
   nome_arquivo_atual = nome_arquivo;
   document.getElementById('template').style.display = 'none';
+  if (btnView.classList.contains('selected')) {
+    display(codigo);
+  }
 }
 
 function deletarTemplate(id) {
@@ -654,8 +727,45 @@ function deletarTemplate(id) {
 }
 }
 
-function clearTemplate() {
-  editor.render({ blocks: [] });
+async function clearTemplate() {
+  const currentData = await editor.save();
+  let images = [];
+
+  currentData.blocks.forEach(block => {
+    if (block.type === "image" && block.data.file && block.data.file.url) {
+      images.push(block.data.file.url);
+    }
+    if (block.type === "Carousel" && block.data.images && Array.isArray(block.data.images)) {
+      block.data.images.forEach(url => {
+        images.push(url);
+      });
+    }
+  });
+
+  if (!globalId) {
+    for (const imageUrl of images) {
+      deleteImages(imageUrl);
+    }
+  } else {
+    for (const imageUrl of images) {
+      const used = await isImageUsed(imageUrl, globalId, true);
+      if (!used) {
+        deleteImages(imageUrl, globalId);
+      }
+
+    editor.render({ blocks: [] });
+    globalId = null;
+    nome_arquivo_atual = "";
+    }
+  }
+
+  if (btnView.classList.contains('selected')) {
+  }
+  
+  await editor.render({ blocks: [] });
+
+  const emptyData = await editor.save();
+  display(emptyData);
   globalId = null;
   nome_arquivo_atual = "";
 }
@@ -667,8 +777,11 @@ document.addEventListener('click', (event) => {
     if (event.target.closest('button')) return;
     if (dropdown.classList.contains("view-menu")){
       if (!event.target.closest('.drop-down-content')) {
-        const dotsButton = document.getElementById('dots');
-        dotsButton.classList.toggle('rotate');
+        const dotsButton = document.getElementById('dropdownId');
+        if (dotsButton) {
+          console.log(dotsButton);
+          dotsButton.classList.toggle('rotate');
+        }
         dropdown.classList.remove('view-menu');
       }
     }
@@ -724,9 +837,18 @@ async function isImageUsed(imageUrl, id = globalId, checkId = false) {
   try{
     const decodeImageUrl = decodeURIComponent(imageUrl);  
     const currentData = await editor.save();
+
     if(currentData.blocks.some(block => block.type === "image" && block.data.file.url === decodeImageUrl)){
       return true;
     }
+
+    if (currentData.blocks.some(block => 
+      block.type === "Carousel" && block.data && block.data.decodeImages && 
+      ((typeof block.data.decodeImages === 'string' && block.data.decodeImages.split(',').map(url => url.trim()).includes(decodeImageUrl)) ||
+      (Array.isArray(block.data.decodeImages) && block.data.decodeImages.includes(decodeImageUrl))))) {
+      return true;
+    }
+
     if (checkId) {
       console.log(id);
       const responseMain = await fetch(`http://localhost/EditorJs/editor_php/carregar.php?id=${id}`, { method: "GET" });
@@ -737,8 +859,16 @@ async function isImageUsed(imageUrl, id = globalId, checkId = false) {
           if (templateData.blocks.some(block => block.type === "image" && block.data.file.url === decodeImageUrl)) {
             return true;
           }
+
+          if (templateData.blocks.some(block => 
+            block.type === "Carousel" && block.data && block.data.decodeImages && 
+            ((typeof block.data.decodeImages === 'string' && block.data.decodeImages.split(',').map(url => url.trim()).includes(decodeImageUrl)) ||
+            (Array.isArray(block.data.decodeImages) && block.data.decodeImages.includes(decodeImageUrl))))) {
+            return true;
+          }
         }
     }
+
     if (id) {
       const versions = await viewVersion(id);
       for (const version of versions) {
@@ -746,21 +876,33 @@ async function isImageUsed(imageUrl, id = globalId, checkId = false) {
         const response = await fetch(`http://localhost/EditorJs/editor_php/carregar.php?versao=${version}&id=${id}`, { method: "GET" });
         const versionData = await response.json();
         console.log(version , ": " , versionData);
+        
         if(versionData.length > 0){
+
           for (let i = 0; i < versionData.length; i++) {
             let templateData = versionData[i].codigo;
-            for (let i = 0; i < templateData.blocks.length; i++) {
-              console.log("template: ", templateData.blocks[i].data.file.url);
-              console.log("image: ", templateData.blocks[i].type);
-              if (templateData.blocks[i].type === "image" && templateData.blocks[i].data.file.url === decodeImageUrl) {
-                console.log("teste true");
+
+            for (let j = 0; j < templateData.blocks.length; j++) {
+              const block = templateData.blocks[j];
+
+              if (block.type === "image" && block.data.file.url === decodeImageUrl) {
                 return true;
               }
-            }
+
+              if (block.type === "Carousel" && block.data && block.data.decodeImages) {
+                if (typeof block.data.decodeImages === 'string' && block.data.decodeImages.split(',').map(url => url.trim()).includes(decodeImageUrl)) {
+                  return true;
+                } else if (Array.isArray(block.data.decodeImages) && block.data.decodeImages.includes(decodeImageUrl)) {
+                  return true;
+                }
+              }
+
+            }   
           }
         }
       }
     }
+
   } catch (error) {
     console.error("Erro ao verificar imagem", error);
   }
@@ -799,7 +941,7 @@ const observer = new MutationObserver((mutationsList) => {
           const imgElement = removedNode.querySelector('.image-tool__image-picture');
           if (imgElement && imgElement.src) {
             const used = isImageUsed(imgElement.src);
-            if (!used) {
+            if (!globalId || !used) {
               deleteImages(imgElement.src);
             }
           } else if (removedNode.querySelector('.carousel')) {
@@ -807,7 +949,7 @@ const observer = new MutationObserver((mutationsList) => {
             imageElements.forEach((img) => {
               if (img.src) {
                 const used = isImageUsed(img.src);
-                if (!used) {
+                if (!globalId || !used) {
                   deleteImages(img.src);
                 }
               }

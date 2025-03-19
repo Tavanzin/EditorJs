@@ -120,7 +120,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo json_encode([
                 "success" => 1, 
                 "message" => "Template atualizado com sucesso!",
-                "template_id" => $template_id
+                "template_id" => $template_id,
+                "codigo" => $codigoAtualizado
             ]);
         } else {
             echo json_encode(["success" => 0, "message" => "Erro ao atualizar o template: " . $updateStmt->error]);
@@ -152,7 +153,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo json_encode([
             "success" => 1, 
             "message" => "Template criado com sucesso!",
-            "template_id" => $template_id
+            "template_id" => $template_id,
+            "codigo" => $codigoAtualizado
         ]);
     }
 }
