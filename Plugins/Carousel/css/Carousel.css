@@ -36,13 +36,14 @@
 
 .inline-btn {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: left;
   align-items: center;
   background-color: transparent;
   border: none;
   height: 32px;
   transition: 0.1s;
   border-radius: 10px;
+  gap: 7px;
 }
 .inline-btn span {
   width: 80%;
@@ -54,11 +55,13 @@
 .inline-btn span:first-child {
   width: 20px;
   height: 20px;
+  font-size: 20px;
   left: 15px;
   text-align: center;
 }
 .inline-btn:hover {
-  background-color: #F8F8F8;
+  background-color: #eeeeee;
+  cursor: pointer;
 }
 
 .modal-overlay {

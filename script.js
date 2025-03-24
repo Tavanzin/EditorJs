@@ -119,7 +119,7 @@ const editor = new EditorJs({
         'bold'
       ],
       toolbox: {
-        title: 'Header',
+        title: 'Header'
       },
       config: {
         levels: [2, 3, 4],
@@ -169,6 +169,14 @@ const editor = new EditorJs({
             config: {
             levels: [2, 3, 4],
             defaultLevel: 3
+            },
+          },
+
+          paragraph: {
+            class: Paragraph,
+            inlineToolbar: true,
+            toolbox: {
+              title: 'Parágrafo'
             },
           },
 
@@ -398,7 +406,7 @@ function carregarTemplatesGeneric(options) {
         templateItem.appendChild(templateContent);
         templateItem.appendChild(versaoDiv);
 
-        const btns = document.createElement("div"); 
+        const btns = document.createElement("div");
         btns.classList.add("btnImport");
 
         if(options.onAplicar) {

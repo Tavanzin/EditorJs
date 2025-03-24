@@ -295,6 +295,12 @@ body {
   margin: 7px 0;
 }
 
+.emptyTemplateList {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 #templateList, #templateSelectList {
   border-top: 1px solid;
   width: calc(100% + 20px);
@@ -396,23 +402,33 @@ body {
 }
 
 .ce-editorjsColumns_col {
-  border: 0.1px solid rgba(0, 0, 0, 0.15);
+  outline: 2px solid rgba(0, 0, 0, 0.15);
+  outline-offset: 2.5px;
   transition: 0.3s;
 }
 .ce-editorjsColumns_col:hover {
-  border: 0.5px solid rgb(0, 140, 210);
+  outline: 2px solid rgb(0, 140, 210);
 }
 
 .ce-block__content {
-  border: 0.5px solid transparent;
+  outline: 2px solid transparent;
+  outline-offset: 2.5px;
   transition: 0.3s;
 }
 .ce-block__content:hover {
-  border: 0.5px solid rgb(0, 140, 210);
+  outline: 2px solid rgb(0, 140, 210);
 }
 .ce-block__content:has(.ce-editorjsColumns_wrapper) {
   border: none !important;
 }
 .ce-block__content:has(.ce-editorjsColumns_wrapper):hover {
   border: none !important;
+}
+
+.ce-popover-item:hover {
+  background-color: #eee !important;
+}
+.ce-popover-item:hover[data-item-name=delete]:hover {
+  background-color: #CE4343 !important;
+  color: white;
 }/*# sourceMappingURL=main.css.map */
