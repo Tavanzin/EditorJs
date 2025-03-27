@@ -294,14 +294,18 @@ let newProjectBtn = document.getElementById('new-project');
 
 newProjectBtn.addEventListener('click', async function() {
   const outputData = await editor.save();
+  const imageUrl = ""
   if (outputData.blocks.length === 0) {
     clearTemplate();
     nome_arquivo_atual = "";
+    globalId = null;
+    deleteImages("");
   } else {
     if (confirm("O projeto atual vai ser perdido, deseja continuar?")) {
       clearTemplate();
       nome_arquivo_atual = "";
       globalId = null;
+      deleteImages("");
     } else {
       if (confirm("Deseja salvar o projeto atual?")) {
         carregarTemplatesSave(outputData);
@@ -310,6 +314,7 @@ newProjectBtn.addEventListener('click', async function() {
           clearTemplate();
           nome_arquivo_atual = "";
           globalId = null;
+          deleteImages("");
         }
       }
     }
@@ -624,7 +629,6 @@ function displayVersions(content, id, dotsIcon, dropdown) {
             if (templateData.blocks && Array.isArray(templateData.blocks)) {
               templateData.blocks.forEach(block => {
                 if (block.type === "image" && block.data && block.data.file && block.data.file.url) {
-                  console.log("Image URL:", block.data.file.url);
                   images.push(block.data.file.url);
                 }
                 
@@ -634,19 +638,16 @@ function displayVersions(content, id, dotsIcon, dropdown) {
                       const urls = block.data.decodeImages.split(',').map(url => url.trim());
                       urls.forEach(url => {
                         if (url) {
-                          console.log("Carousel URL:", url);
                           images.push(url);
                         }
                       });
                     } else {
-                      console.log("Carousel URL:", block.data.decodeImages.trim());
                       images.push(block.data.decodeImages.trim());
                     }
                   }
                   else if (Array.isArray(block.data.decodeImages)) {
                     block.data.decodeImages.forEach(url => {
                       if (url) {
-                        console.log("Carousel URL:", url);
                         images.push(url);
                       }
                     });
@@ -729,6 +730,8 @@ function deletarTemplate(id) {
       if (nome_arquivo_atual === data.nome_arquivo) {
         clearTemplate();
         nome_arquivo_atual = "";
+        globalId = null;
+        deleteImages(""); 
       }
     })
     .catch(error => { console.error('Erro ao deletar o template:', error); });
@@ -918,7 +921,6 @@ async function isImageUsed(imageUrl, id = globalId, checkId = false) {
 }
 
 export async function deleteImages(imageUrl, id = globalId) {
-  console.log(id);
     fetch(`http://localhost/EditorJs/editor_php/delete_image.php`, {
       method: "POST",
       headers: { 'Content-Type': 'application/json' },

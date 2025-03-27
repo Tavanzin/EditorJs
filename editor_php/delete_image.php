@@ -6,6 +6,20 @@ header("Access-Control-Allow-Headers: Content-Type");
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (isset($input['imageUrl']) && $input['imageUrl'] === "") {
+        $dir = 'uploads/temp/';
+        $files = glob($dir . '*');
+        $deleted = 0;
+        foreach ($files as $file) {
+            if (is_file($file) && unlink($file)) {
+                $deleted++;
+            }
+        }
+        echo json_encode(["success" => 1, "message" => "Todas as imagens temporárias foram deletadas.", "deleted_count" => $deleted]);
+        exit;
+    }
+    
     if (!isset($input['imageUrl'])) {
         echo json_encode(["success" => 0, "message" => "URL da imagem não fornecida."]);
         exit;
@@ -32,3 +46,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 } else {
     echo json_encode(["success" => 0, "message" => "Método inválido."]);
 }
+?>
