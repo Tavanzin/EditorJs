@@ -699,6 +699,7 @@ function aplicarVersao(versao, id) {
     .then(data => {
       editor.render(data[0].codigo);
       globalId = id;
+      
       if (btnView.classList.contains('selected')) {
         display(codigo);
       }
@@ -767,6 +768,7 @@ async function clearTemplate() {
     editor.render({ blocks: [] });
     globalId = null;
     nome_arquivo_atual = "";
+    deleteImages("");
     }
   }
 
@@ -779,6 +781,7 @@ async function clearTemplate() {
   display(emptyData);
   globalId = null;
   nome_arquivo_atual = "";
+  deleteImages("");
 }
 
 document.addEventListener('click', (event) => {
